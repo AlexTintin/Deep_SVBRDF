@@ -33,13 +33,13 @@ def train_model(config,writer, model, dataloaders, criterion, optimizer,device, 
 
             #while dataloaders[phase].has_next():
             # Iterate over data.
-            for i, data in enumerate(dataloadered, 1):
+            for index_data, data in enumerate(dataloaders[phase]):
                 # get the inputs; data is a list of [inputs, labels]
                 inputs, labels = data["input"].float(), data["label"].float()
                 # forward
                 # track history if only in train
                 with torch.set_grad_enabled(phase == 'train'):
-                    outputs = net(inputs)
+                    outputs = model(inputs)
                     loss = criterion(outputs, labels)
 
                     # backward + optimize only if in training phase
@@ -61,6 +61,7 @@ def train_model(config,writer, model, dataloaders, criterion, optimizer,device, 
             writer.add_scalar(phase + ' loss',
                             epoch_loss,
                             epoch)
+
 
             # deep copy the model
             if phase == 'val' and epoch_loss < best_loss:

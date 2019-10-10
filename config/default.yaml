@@ -1,5 +1,7 @@
 path:
-  data_path: ./../my_little_dataset
+  data_path_train: ./../my_little_dataset/train
+  data_path_val: ./../my_little_dataset/val
+  data_path_test: ./../my_little_dataset/test
   result_path: results/
   logs_tensorboard: ./runs/test_1
 
@@ -11,5 +13,5 @@ train:
   num_epochs: 5
   learning_rate: 0.001
   weight_decay: 0.00001
-  batch_size: 64
+  batch_size: 2
   num_workers: 2

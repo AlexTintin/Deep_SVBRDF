@@ -14,7 +14,7 @@ import pandas as pd
 class Dataloader(Dataset):
     """Face Landmarks dataset."""
 
-    def __init__(self, config, transform=None):
+    def __init__(self, config, phase, transform=None):
         """
         Args:
             csv_file (string): Path to the csv file with annotations.
@@ -23,26 +23,27 @@ class Dataloader(Dataset):
                 on a sample.
         """
         data_dico = {}
-
-        os.chdir(config.path.data_path)
+        self.phase = phase
+        if phase == "train":
+            data_path = config.path.data_path_train
+        if phase == "val":
+            data_path = config.path.data_path_val
+        if phase == "test":
+            data_path = config.path.data_path_test
+        os.chdir(data_path)
         for index_file, file in enumerate(glob.glob("*.png")):
             split_name = file.split(";")
-            data_dico[int(split_name[0])] = {'nom_file': config.path.data_path+"/"+file, "id": int(split_name[0]),
+            data_dico[index_file] = {'nom_file': data_path+"/"+file, "id": int(split_name[0]),
                                              "texture": split_name[1].split(("_")),
                                              "info_inconnue": split_name[1].split(("."))[0]}
-
         self.dico =  data_dico
-
         self.config = config
-
         self.transform = transform
 
     def __len__(self):
-
         return len(self.dico)-1
 
     def __getitem__(self, idx):
-        idx +=1
         img_name = self.dico[idx]["nom_file"]
         image = io.imread(img_name)
         input = image[:,:288,:]
@@ -52,10 +53,8 @@ class Dataloader(Dataset):
         specular = image[:,4*288:5 * 288,:]
         #label = np.concatenate((normals,diffuse,roughness,specular),axis = 2)
         sample = {'input': input, 'label': normals}
-
         if self.transform:
             sample = self.transform(sample)
-
         return sample
 
 class ToTensor(object):
