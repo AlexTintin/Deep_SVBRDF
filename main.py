@@ -6,11 +6,10 @@ from utils import dataloader
 from torchvision import transforms, utils
 from torch.utils.data import Dataset, DataLoader
 from src.model_AE import *
-
 import torch.optim as optim
 
-device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
+device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 config = config()
 
 
@@ -18,12 +17,12 @@ dataload = dataloader.Dataloader(config,transform=transforms.Compose([ToTensor()
 dataloadered = DataLoader(dataload, batch_size=config.train.batch_size,
                         shuffle=True, num_workers=config.train.num_workers)
 
-num_epochs = 100
-learning_rate = 1e-3
+num_epochs = config.train.num_epochs
+learning_rate = config.train.learning_rate
 net = autoencoder()
 criterion = nn.MSELoss()
 optimizer = torch.optim.Adam(
-net.parameters(), lr=learning_rate, weight_decay=1e-5)
+net.parameters(), lr=learning_rate, weight_decay=config.train.weight_decay)
 
 
 
@@ -82,14 +81,3 @@ for i in range(len(dataload)):
 
 
 """
-
-
-
-
-
-
-
-
-
-
-

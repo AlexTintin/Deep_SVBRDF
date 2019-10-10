@@ -7,7 +7,6 @@ import numpy as np
 
 from torch.utils.data import Dataset, DataLoader
 from torchvision import transforms, utils
-from utils import config
 import glob, os
 import pandas as pd
 
@@ -73,4 +72,3 @@ class ToTensor(object):
         label = label.transpose((2, 0, 1))
         return {'input': torch.from_numpy(image),
                 'label': torch.from_numpy(label)}
-
