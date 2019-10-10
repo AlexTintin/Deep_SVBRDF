@@ -52,35 +52,3 @@ print("Start training model")
 print()
 best_model = train_model(config, writer, net, dataloaders, criterion, optimizer,device, num_epochs=config.train.num_epochs)
 print('Finished Training')
-"""
-
-
-
-#sample = dataload[1]
-#datasample = sample['input']
-print(datasample.shape)
-x_latent = net.encoder(datasample)
-print(x_latent.shape)
-
-def plot_slidder(x_latent, net):
-    pass
-x_latent_modify = x_latent + 1
-sortie_to_plot = net.decoder(x_latent_modify)
-
-
-fig = plt.figure()
-
-for i in range(len(dataload)):
-    sample = dataload[i+1]
-    ax = plt.subplot(1, 4, i + 1)
-    plt.tight_layout()
-    ax.set_title('Sample #{}'.format(i))
-    ax.axis('off')
-    plt.imshow(sample["input"])
-
-    if i == 3:
-        plt.show()
-        break
-
-
-"""

@@ -28,8 +28,7 @@ class AE_Linear(nn.Module):
             nn.Linear(84, 120),
             nn.ReLU(True),
             nn.Linear(120, 288 * 288 * 3),
-            UnFlatten(),
-            nn.Sigmoid()
+            UnFlatten()
             )
 
     def forward(self, x):

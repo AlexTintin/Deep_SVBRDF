@@ -4,3 +4,4 @@ my_little_dataset/
 utils/__pycache__/
 runs/
 src/__pycache__/
+mytraining.pt
