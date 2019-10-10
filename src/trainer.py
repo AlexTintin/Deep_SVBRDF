@@ -13,7 +13,7 @@ def train_model(config,writer, model, dataloaders, criterion, optimizer,device, 
 
     best_model_wts = copy.deepcopy(model.state_dict())
     #best_acc = 0.0
-    best_loss = 100
+    best_loss = 100000
     n_batches = config.train.num_epochs
 
     for epoch in range(num_epochs):
@@ -35,7 +35,7 @@ def train_model(config,writer, model, dataloaders, criterion, optimizer,device, 
             # Iterate over data.
             for index_data, data in enumerate(dataloaders[phase]):
                 # get the inputs; data is a list of [inputs, labels]
-                inputs, labels = data["input"].float(), data["label"].float()
+                inputs, labels = data["input"].float().to(device), data["label"].float().to(device)
                 # forward
                 # track history if only in train
                 with torch.set_grad_enabled(phase == 'train'):
@@ -77,5 +77,6 @@ def train_model(config,writer, model, dataloaders, criterion, optimizer,device, 
 
     # load best model weights
     model.load_state_dict(best_model_wts)
-    #TODO : save
-    return model
+    #save
+    torch.save(model.state_dict(), config.path.result_path_model)
+    return model    
