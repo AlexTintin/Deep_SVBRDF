@@ -1,0 +1,7 @@
+path:
+  data_path: config/config.yaml
+  result_path: results/
+
+general:
+  use_cuda: Yes
+  seed: 0
