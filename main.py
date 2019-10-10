@@ -7,10 +7,21 @@ from torchvision import transforms, utils
 from torch.utils.data import Dataset, DataLoader
 from src.model_AE import *
 import torch.optim as optim
-
+from torch.utils.tensorboard import SummaryWriter
+import random
+import numpy as np
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 config = config()
+writer = SummaryWriter(config.path.logs_tensorboard)
+print()
+print("Use Hardware : ", device)
+#Reproductibilites
+random.seed(config.general.seed)
+np.random.seed(config.general.seed)
+torch.manual_seed(config.general.seed)
+torch.backends.cudnn.deterministic = True
+torch.backends.cudnn.benchmark = False
 
 
 dataload = dataloader.Dataloader(config,transform=transforms.Compose([ToTensor()]))
@@ -26,7 +37,7 @@ net.parameters(), lr=learning_rate, weight_decay=config.train.weight_decay)
 
 
 
-for epoch in range(1):  # loop over the dataset multiple times
+for epoch in range(num_epochs):  # loop over the dataset multiple times
 
     running_loss = 0.0
     for i, data in enumerate(dataloadered, 1):
