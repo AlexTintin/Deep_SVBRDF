@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 from utils import dataloader
 from torchvision import transforms, utils
 from torch.utils.data import Dataset, DataLoader
-from src.model_AE import *
+from src.model_AE_Linear import *
 import torch.optim as optim
 from torch.utils.tensorboard import SummaryWriter
 import random
@@ -41,7 +41,7 @@ dataloaders = {'train': dataloadered_train, 'val': dataloadered_val, 'test':data
 print("End Load data")
 print()
 print("Load model")
-net = autoencoder()
+net = AE_Linear()
 net.to(device)
 criterion = nn.MSELoss()
 optimizer = torch.optim.Adam(net.parameters(), lr=config.train.learning_rate,
