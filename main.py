@@ -10,12 +10,14 @@ import torch.optim as optim
 from torch.utils.tensorboard import SummaryWriter
 import random
 import numpy as np
+from src.trainer import train_model
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 config = config()
 writer = SummaryWriter(config.path.logs_tensorboard)
 print()
 print("Use Hardware : ", device)
+
 #Reproductibilites
 random.seed(config.general.seed)
 np.random.seed(config.general.seed)
@@ -23,21 +25,23 @@ torch.manual_seed(config.general.seed)
 torch.backends.cudnn.deterministic = True
 torch.backends.cudnn.benchmark = False
 
-
-dataload = dataloader.Dataloader(config,transform=transforms.Compose([ToTensor()]))
+#Load data
+dataload = dataloader.Dataloader(config, transform=transforms.Compose([ToTensor()]))
 dataloadered = DataLoader(dataload, batch_size=config.train.batch_size,
                         shuffle=True, num_workers=config.train.num_workers)
+dataloaders = {'train': dataloadered, 'val': dataloadered}
 
-num_epochs = config.train.num_epochs
-learning_rate = config.train.learning_rate
+#Load model
 net = autoencoder()
 criterion = nn.MSELoss()
 optimizer = torch.optim.Adam(
-net.parameters(), lr=learning_rate, weight_decay=config.train.weight_decay)
+net.parameters(), lr=config.train.learning_rate,
+weight_decay=config.train.weight_decay)
 
+best_model = train_model(config, writer, net, dataloaders, criterion, optimizer,device, num_epochs=config.train.num_epochs)
 
-
-for epoch in range(num_epochs):  # loop over the dataset multiple times
+"""
+for epoch in range(config.train.num_epochs):  # loop over the dataset multiple times
 
     running_loss = 0.0
     for i, data in enumerate(dataloadered, 1):
@@ -75,7 +79,7 @@ def plot_slidder(x_latent, net):
 x_latent_modify = x_latent + 1
 sortie_to_plot = net.decoder(x_latent_modify)
 
-"""
+
 fig = plt.figure()
 
 for i in range(len(dataload)):
