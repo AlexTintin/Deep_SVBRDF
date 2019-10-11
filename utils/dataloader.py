@@ -52,21 +52,10 @@ class Dataloader(Dataset):
         roughness = image[:,3*288:4 * 288,:]
         specular = image[:,4*288:5 * 288,:]
         #label = np.concatenate((normals,diffuse,roughness,specular),axis = 2)
-        sample = {'input': input, 'label': normals}
         if self.transform:
-            sample = self.transform(sample)
+            input_t = self.transform(input)
+            normals_t = self.transform(normals)
+            sample = {'input': input_t, 'label': normals_t}
+        else:
+            sample = {'input': input, 'label': normals}
         return sample
-
-class ToTensor(object):
-    """Convert ndarrays in sample to Tensors."""
-
-    def __call__(self, sample):
-        image, label = sample['input'], sample['label']
-
-        # swap color axis because
-        # numpy image: H x W x C
-        # torch image: C X H X W
-        image = image.transpose((2, 0, 1))
-        label = label.transpose((2, 0, 1))
-        return {'input': torch.from_numpy(image),
-                'label': torch.from_numpy(label)}
