@@ -27,12 +27,9 @@ torch.backends.cudnn.benchmark = False
 #Load data
 print()
 print("Load data")
-
 trans_all = transforms.Compose([
         transforms.ToTensor()
     ])
-
-
 dataload_train = dataloader.Dataloader(config, phase = "train", transform=trans_all)
 dataloadered_train = DataLoader(dataload_train, batch_size=config.train.batch_size,
                         shuffle=True, num_workers=config.train.num_workers)

@@ -7,7 +7,6 @@ from skimage import io
 from torch.utils.data import Dataset, DataLoader
 from torchvision import transforms, utils
 import glob, os
-import pandas as pd
 
 
 
