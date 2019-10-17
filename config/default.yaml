@@ -9,8 +9,8 @@ general:
   seed: 0
 
 train:
-  num_epochs: 10
-  learning_rate: 0.001
-  weight_decay: 0.00001
-  batch_size: 2
-  num_workers: 2
+  num_epochs: 10            #number of epochs
+  learning_rate: 0.001      #learning rate for optimizer
+  weight_decay: 0.00001     #régularisation
+  batch_size: 2             #size of batch
+  num_workers: 2            #number of workers
