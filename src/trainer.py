@@ -28,10 +28,7 @@ def train_model(config, writer, model, dataloaders, criterion, optimizer, device
     best_model_wts = copy.deepcopy(model.state_dict())
     #introduction du best_loss pour le val, pour retenir le meilleur model
     best_loss = 100000
-<<<<<<< HEAD
     n_batches = config.train.batch_size
-=======
->>>>>>> ad9ce8880d8bd5d8f490f06aff3c7c5904af0ab9
     num_epochs = config.train.num_epochs
     #début de l'entrainement
     for epoch in range(num_epochs):
