@@ -13,9 +13,11 @@ import random
 import numpy as np
 from src.trainer import train_model
 
-
+# Device = cpu ou cuda
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+#load les parametres dasn un dictionnaire
 config = config()
+# écrire les logs dans writer pour tensorboard
 writer = SummaryWriter(config.path.logs_tensorboard)
 print()
 print("Use Hardware : ", device)
@@ -25,12 +27,14 @@ np.random.seed(config.general.seed)
 torch.manual_seed(config.general.seed)
 torch.backends.cudnn.deterministic = True
 torch.backends.cudnn.benchmark = False
-#Load data
+# Load data
 print()
 print("Load data")
+# Transforme qui transforme en tensor
 trans_all = transforms.Compose([
         transforms.ToTensor()
     ])
+# Charger les dataloaders des 3 phases train / val / test
 dataload_train = dataloader.Dataloader(config, phase = "train", transform=trans_all)
 dataloadered_train = DataLoader(dataload_train, batch_size=config.train.batch_size,
                         shuffle=True, num_workers=config.train.num_workers)
@@ -40,19 +44,23 @@ dataloadered_val = DataLoader(dataload_val, batch_size=config.train.batch_size,
 dataload_test = dataloader.Dataloader(config, phase = "test", transform=trans_all)
 dataloadered_test = DataLoader(dataload_test, batch_size=config.train.batch_size,
                         shuffle=True, num_workers=config.train.num_workers)
+# Dataloaders est 1 dictionnaire qui contient les 3 dataloaders
 dataloaders = {'train': dataloadered_train, 'val': dataloadered_val, 'test':dataloadered_test}
-#Load model
 print("End Load data")
 print()
+# Charger le model
 print("Load model")
 net = autoencoder()
 net.to(device)
+# criterion : mean square error
 criterion = nn.MSELoss()
+#optimizer of Adam
 optimizer = torch.optim.Adam(net.parameters(), lr=config.train.learning_rate,
 weight_decay=config.train.weight_decay)
 print("End Load model")
 print()
 print("Start training model")
 print()
-best_model = train_model(config, writer, net, dataloaders, criterion, optimizer,device, num_epochs=config.train.num_epochs)
+# lancer l'entrainement du model
+best_model = train_model(config, writer, net, dataloaders, criterion, optimizer, device)
 print('Finished Training')
