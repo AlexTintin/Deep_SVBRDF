@@ -8,6 +8,7 @@ from torch.utils.data import Dataset, DataLoader
 from src.model_AE_Linear import *
 from src.model_AE import *
 from src.Model_Unet import *
+from src.Modified_Unet import *
 import torch.optim as optim
 from torch.utils.tensorboard import SummaryWriter
 import random
@@ -51,10 +52,10 @@ print("End Load data")
 print()
 # Charger le model
 print("Load model")
-net = Unet() #autoencoder()
+net = Unet() #Unetglobal() #autoencoder()
 net.to(device)
 # criterion : mean square error
-criterion = nn.MSELoss()
+criterion = nn.L1Loss()
 #optimizer of Adam
 optimizer = torch.optim.Adam(net.parameters(), lr=config.train.learning_rate,
 weight_decay=config.train.weight_decay)

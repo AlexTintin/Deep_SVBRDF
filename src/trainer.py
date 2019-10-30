@@ -53,6 +53,7 @@ def train_model(config, writer, model, dataloaders, criterion, optimizer, device
                 # track history if only in train
                 with torch.set_grad_enabled(phase == 'train'):
                     outputs = model(inputs)
+                    #outputs = model(inputs, (torch.mean(torch.mean(inputs, dim=2),dim=2)))
                     loss = criterion(outputs, labels)
                     # backward + optimize only if in training phase
                     if phase == 'train':
