@@ -2,7 +2,7 @@ from utils import config
 import glob, os
 import torch
 import matplotlib.pyplot as plt
-from utils import dataloader
+from src import dataloader
 from torchvision import transforms, utils
 from torch.utils.data import Dataset, DataLoader
 from src.model_AE_Linear import *
@@ -61,6 +61,7 @@ print("End Load model")
 print()
 print("Start training model")
 print()
+os.chdir('../../../')
 # lancer l'entrainement du model
 best_model = train_model(config, writer, net, dataloaders, criterion, optimizer, device)
 print('Finished Training')

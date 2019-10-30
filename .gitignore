@@ -1,6 +1,6 @@
 .idea/
 config/config.yaml
-my_little_dataset/
+content/
 utils/__pycache__/
 runs/
 src/__pycache__/

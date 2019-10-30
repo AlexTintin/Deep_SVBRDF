@@ -4,6 +4,7 @@ import torch.optim as optim
 import time
 import copy
 import torch
+import os
 import numpy as np
 
 
@@ -37,6 +38,7 @@ def train_model(config, writer, model, dataloaders, criterion, optimizer, device
         # Each epoch has a training and validation phase
         for phase in ['train', 'val']:
             if phase == 'train':
+
                 model.train()  # Set model to training mode
             else:
                 model.eval()   # Set model to evaluate mode

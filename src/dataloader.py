@@ -25,11 +25,13 @@ class Dataloader(Dataset):
         self.phase = phase
         if phase == "train":
             data_path = config.path.data_path_train
+            os.chdir(data_path)
         if phase == "val":
             data_path = config.path.data_path_val
+            os.chdir('../../../'+data_path)
         if phase == "test":
             data_path = config.path.data_path_test
-        os.chdir(data_path)
+            os.chdir('../../../'+data_path)
         for index_file, file in enumerate(glob.glob("*.png")):
             split_name = file.split(";")
             data_dico[index_file] = {'nom_file': data_path+"/"+file, "id": int(split_name[0]),
