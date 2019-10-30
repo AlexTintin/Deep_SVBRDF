@@ -14,10 +14,10 @@ class doubleConv(nn.Module):
         super(doubleConv, self).__init__()
 
         self.doubleconv = nn.Sequential(
-            nn.Conv2d(input_size, output_size, kernel_size=3),
+            nn.Conv2d(input_size, output_size, kernel_size=3, padding=1),
             nn.BatchNorm2d(output_size),
             nn.ReLU(True),
-            nn.Conv2d(output_size, output_size, kernel_size=3),
+            nn.Conv2d(output_size, output_size, kernel_size=3, padding=1),
             nn.BatchNorm2d(output_size),
             nn.ReLU(True),
         )
@@ -37,10 +37,10 @@ class Unet(nn.Module):
         self.down2 = doubleConv(128, 256)
         self.down3 = doubleConv(256, 512)
         self.down4 = doubleConv(512, 1024)
-        self.up1 = doubleConv(1024, 512)
-        self.up2 = doubleConv(512, 256)
-        self.up3 = doubleConv(256, 128)
-        self.up4 = doubleConv(128, 64)
+        self.up1 = doubleConv(1024+512, 512)
+        self.up2 = doubleConv(512+256, 256)
+        self.up3 = doubleConv(256+128, 128)
+        self.up4 = doubleConv(128+64, 64)
         self.outc = nn.Conv2d(64, 3, kernel_size=1)
         self.maxpool = nn.MaxPool2d(2, 2)
         self.unmawpool = nn.Upsample(scale_factor=2, mode='bilinear', align_corners=True)
@@ -100,7 +100,7 @@ class Unet(nn.Module):
         x15 = self.up3(torch.cat([x14, x3], dim=1))
         x16 = self.unmawpool(x15)
         x17 = self.up4(torch.cat([x16, x1], dim=1))
-        x18 = self.unmawpool(x17)
-        x19 = self.outc(x18)
+        #x18 = self.unmawpool(x17)
+        x19 = self.outc(x17)
 
         return x19

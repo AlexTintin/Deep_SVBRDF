@@ -2,10 +2,10 @@ from utils import config
 import glob, os
 import torch
 import matplotlib.pyplot as plt
-from utils import dataloader
+from src import dataloader
 from torchvision import transforms, utils
 from torch.utils.data import Dataset, DataLoader
-from src.model_AE_Linear import *
+from src.Model_Unet import *
 import torch.optim as optim
 from torch.utils.tensorboard import SummaryWriter
 import random
@@ -51,13 +51,14 @@ dataloadered_test = DataLoader(dataload_test, batch_size=config.train.batch_size
                         shuffle=True, num_workers=config.train.num_workers)
 dataloaders = {'train': dataloadered_train, 'val': dataloadered_val, 'test':dataloadered_test}
 # get some random training images
+os.chdir('../../../')
 dataiter = iter(dataloadered_train)
 sample = dataiter.next()
 images, labels = sample["input"], sample["label"]
 print("End Load data")
 print()
 print("Load model")
-the_model = AE_Linear()
+the_model = Unet()
 the_model.to(device)
 writer.add_graph(the_model, images.float().to(device))
 writer.close()
@@ -66,8 +67,9 @@ the_model.eval()
 print("End model")
 
 
-x_latent = the_model.encoder(images.float().to(device))
-sortie_to_plot = the_model.decoder(x_latent.float().to(device))
+#x_latent = the_model.encoder(images.float().to(device))
+#sortie_to_plot = the_model.decoder(x_latent.float().to(device))
+sortie_to_plot = the_model(images.float().to(device))
 
 # create grid of images
 img_grid = torchvision.utils.make_grid(images)

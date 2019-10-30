@@ -7,6 +7,7 @@ from torchvision import transforms, utils
 from torch.utils.data import Dataset, DataLoader
 from src.model_AE_Linear import *
 from src.model_AE import *
+from src.Model_Unet import *
 import torch.optim as optim
 from torch.utils.tensorboard import SummaryWriter
 import random
@@ -50,7 +51,7 @@ print("End Load data")
 print()
 # Charger le model
 print("Load model")
-net = autoencoder()
+net = Unet() #autoencoder()
 net.to(device)
 # criterion : mean square error
 criterion = nn.MSELoss()
