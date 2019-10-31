@@ -13,7 +13,7 @@ import torch.optim as optim
 from torch.utils.tensorboard import SummaryWriter
 import random
 import numpy as np
-from src.trainer import train_model
+from src.trainer import *
 
 # Device = cpu ou cuda
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
@@ -36,20 +36,15 @@ print("Load data")
 trans_all = transforms.Compose([
         transforms.ToTensor()
     ])
-# Charger les dataloaders des 3 phases train / val / test
-dataload_train = dataloader.Dataloader(config, phase = "train", transform=trans_all)
-dataloadered_train = DataLoader(dataload_train, batch_size=config.train.batch_size,
-                        shuffle=True, num_workers=config.train.num_workers)
+
 dataload_val = dataloader.Dataloader(config, phase = "val", transform=trans_all)
 dataloadered_val = DataLoader(dataload_val, batch_size=config.train.batch_size,
                         shuffle=True, num_workers=config.train.num_workers)
 dataload_test = dataloader.Dataloader(config, phase = "test", transform=trans_all)
 dataloadered_test = DataLoader(dataload_test, batch_size=config.train.batch_size,
                         shuffle=True, num_workers=config.train.num_workers)
-# Dataloaders est 1 dictionnaire qui contient les 3 dataloaders
-dataloaders = {'train': dataloadered_train, 'val': dataloadered_val, 'test':dataloadered_test}
-print("End Load data")
-print()
+
+
 # Charger le model
 print("Load model")
 net = Unet() #Unetglobal() #autoencoder()
@@ -61,9 +56,45 @@ optimizer = torch.optim.Adam(net.parameters(), lr=config.train.learning_rate,
 weight_decay=config.train.weight_decay)
 print("End Load model")
 print()
-print("Start training model")
-print()
-os.chdir('../../../')
-# lancer l'entrainement du model
-best_model = train_model(config, writer, net, dataloaders, criterion, optimizer, device)
-print('Finished Training')
+
+
+if config.train.real_training==False:
+
+    dataload_train = dataloader.Dataloader(config, phase = "train", transform=trans_all)
+    dataloadered_train = DataLoader(dataload_train, batch_size=config.train.batch_size,
+                                shuffle=True, num_workers=config.train.num_workers)
+    dataloaders = {'train': dataloadered_train, 'val': dataloadered_val, 'test':dataloadered_test}
+    print("End Load data")
+    print()
+
+    print("Start training model")
+    print()
+    os.chdir('../../../')
+    # lancer l'entrainement du model
+
+    best_model = train_model(config, writer, net, dataloaders, criterion, optimizer, device)
+    print('Finished Training')
+
+
+else:
+
+    for i in range(config.train.trainset_division):
+        # Charger les dataloaders des 3 phases train / val / test
+        dataload_train = dataloader.Dataloader(config, phase = "train",iteration = i, transform=trans_all)
+        dataloadered_train = DataLoader(dataload_train, batch_size=config.train.batch_size,
+                                shuffle=True, num_workers=config.train.num_workers)
+
+        # Dataloaders est 1 dictionnaire qui contient les 3 dataloaders
+        dataloaders = {'train': dataloadered_train, 'val': dataloadered_val, 'test':dataloadered_test}
+        print("End Load data")
+        print()
+
+        print("Start training model")
+        print()
+        os.chdir('../')
+        # lancer l'entrainement du model
+        if i==0:
+            best_model = train_model_init(config, writer, net, dataloaders, criterion, optimizer, device)
+        else:
+            best_model = train_model_iter(config, writer, best_model, dataloaders, criterion, optimizer, device, i)
+        print('Finished Training')

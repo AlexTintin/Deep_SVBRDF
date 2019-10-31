@@ -13,7 +13,7 @@ import glob, os
 class Dataloader(Dataset):
     """Face Landmarks dataset."""
 
-    def __init__(self, config, phase, transform=None):
+    def __init__(self, config, phase,iteration=0, transform=None):
         """
         Args:
             csv_file (string): Path to the csv file with annotations.
@@ -23,12 +23,18 @@ class Dataloader(Dataset):
         """
         data_dico = {}
         self.phase = phase
-        if phase == "train":
+        self.totiter = config.train.trainset_division
+        self.iter = iteration
+        self.realdata = config.train.real_training
+        if ((phase == "train") & (iteration==0)):
+            data_path = config.path.data_path_train
+            os.chdir('../../../'+data_path)
+        elif(phase == "train"):
             data_path = config.path.data_path_train
             os.chdir(data_path)
         if phase == "val":
             data_path = config.path.data_path_val
-            os.chdir('../../../'+data_path)
+            os.chdir(data_path)
         if phase == "test":
             data_path = config.path.data_path_test
             os.chdir('../../../'+data_path)
@@ -42,10 +48,16 @@ class Dataloader(Dataset):
         self.transform = transform
 
     def __len__(self):
-        return len(self.dico)-1
+        if ((self.phase == "train") & self.realdata==True):
+            return int((len(self.dico)-1)/self.totiter)
+        else:
+            return (len(self.dico) - 1)
 
     def __getitem__(self, idx):
-        img_name = self.dico[idx]["nom_file"]
+        if ((self.phase == "train") & self.realdata==True):
+            img_name = self.dico[int((len(self.dico)-1)/self.totiter)*self.iter+idx]["nom_file"]
+        else:
+            img_name = self.dico[idx]["nom_file"]
         image = io.imread(img_name)
         input = image[:,:288,:]
         normals = image[:,288:2*288,:]
