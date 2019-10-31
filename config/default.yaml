@@ -1,19 +1,18 @@
 path:
-  data_path_realtrain: ../DeepMaterialsData/trainBlended
   data_path_train: ./content/my_little_dataset/train
   data_path_val: ./content/my_little_dataset/val
   data_path_test: ./content/my_little_dataset/test
-  result_path_model: ./content/mytraining2.pt
-  logs_tensorboard: ./runs/test_2
+  result_path_model: ./content/mytraining.pt
+  logs_tensorboard: ./runs/test
 
-  general:
-    seed: 0
+general:
+  seed: 0
 
-  train:
-    num_epochs: 10            #number of epochs
-    learning_rate: 0.001      #learning rate for optimizer
-    weight_decay: 0.00001     #régularisation
-    batch_size: 2             #size of batch
-    num_workers: 2            #number of workers
-    trainset_division: 1000    #trainset too big so we divide it in 100
-    real_training: False
+train:
+  num_epochs: 10            #number of epochs
+  learning_rate: 0.001      #learning rate for optimizer
+  weight_decay: 0.00001     #régularisation
+  batch_size: 2             #size of batch
+  num_workers: 2            #number of workers
+  trainset_division: 1000    #trainset too big so we divide it in 100
+  real_training: False
