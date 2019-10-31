@@ -4,4 +4,3 @@ content/
 utils/__pycache__/
 runs/
 src/__pycache__/
-mytraining.pt
