@@ -9,7 +9,7 @@ class Flatten(nn.Module):
 
 class UnFlatten(nn.Module):
     def forward(self, input, size=1024):
-        return input.view(input.size(0), 16, 280, 280)
+        return input.view(input.size(0), 512, 4, 4)
 
 class doubleConv(nn.Module):
     def __init__(self, input_size, output_size):
@@ -38,17 +38,21 @@ class VUnet(nn.Module):
         self.down1 = doubleConv(64, 128)
         self.down2 = doubleConv(128, 256)
         self.down3 = doubleConv(256, 512)
-        self.down4 = doubleConv(512, 1024)
-        self.up1 = doubleConv(1024+512, 512)
-        self.up2 = doubleConv(512+256, 256)
-        self.up3 = doubleConv(256+128, 128)
-        self.up4 = doubleConv(128+64, 64)
+        self.down4 = doubleConv(512, 512)
+        self.down5 = doubleConv(512, 512)
+        self.down6 = doubleConv(512, 512)
+        self.up1 = doubleConv(512+512, 512)
+        self.up2 = doubleConv(512 + 512, 512)
+        self.up3 = doubleConv(512 + 512, 512)
+        self.up4 = doubleConv(512+256, 256)
+        self.up5 = doubleConv(256+128, 128)
+        self.up6 = doubleConv(128+64, 64)
         self.outc = nn.Conv2d(64, 3, kernel_size=1)
         self.maxpool = nn.MaxPool2d(2, 2)
         self.unmawpool = nn.Upsample(scale_factor=2, mode='bilinear', align_corners=True)
         self.flat = Flatten()
         self.unflat = UnFlatten()
-        self.lin = nn.Linear(1024,1024)
+        #self.lin = nn.Linear(2,8192)
 
     def encode(self, x):
         x1 = self.inc(x)
@@ -60,44 +64,50 @@ class VUnet(nn.Module):
         x7 = self.down3(x6)
         x8 = self.maxpool(x7)
         x9 = self.down4(x8)
-        return x9,x7,x5,x3,x1
+        x10 = self.maxpool(x9)
+        x11 = self.down5(x10)
+        x12 = self.maxpool(x11)
+        x13 = self.down6(x12)
+        return x13,x11,x9,x7,x5,x3,x1
 
-    def decode(self,x,x7,x5,x3,x1):
-        x10 = self.unmawpool(x)
-        x11 = self.up1(torch.cat([x10, x7], dim=1))
+    def decode(self,x13,x11,x9,x7,x5,x3,x1):
+        x10a = self.unmawpool(x13)
+        x11a = self.up1(torch.cat([x10a, x11], dim=1))
+        x10b = self.unmawpool(x11a)
+        x11b = self.up2(torch.cat([x10b, x9], dim=1))
+        x10 = self.unmawpool(x11b)
+        x11 = self.up3(torch.cat([x10, x7], dim=1))
         x12 = self.unmawpool(x11)
-        x13 = self.up2(torch.cat([x12, x5], dim=1))
+        x13 = self.up4(torch.cat([x12, x5], dim=1))
         x14 = self.unmawpool(x13)
-        x15 = self.up3(torch.cat([x14, x3], dim=1))
+        x15 = self.up5(torch.cat([x14, x3], dim=1))
         x16 = self.unmawpool(x15)
-        x17 = self.up4(torch.cat([x16, x1], dim=1))
+        x17 = self.up6(torch.cat([x16, x1], dim=1))
         # x18 = self.unmawpool(x17)
         x19 = self.outc(x17)
+        return x19
 
     def reparametrize(self,x):
-        mu = self.lin(self.flat(x))
-        logvar = self.lin(self.flat(x))
+        mu = self.flat(x)
+        logvar = self.flat(x)
         std = torch.exp(0.5 * logvar)
         eps = torch.randn_like(std)
-        return mu + eps * std,mu,logvar
+        return mu + eps * std, mu, logvar
 
 
     def forward(self, x):
-        xlatent, x7,x5,x3,x1 = self.encode(self, x)
-        z,mu,logvar = self.reparameterize(xlatent)
-        x = self.decode(z, x7,x5,x3,x1)
+        xlatent, x11,x9,x7,x5,x3,x1 = self.encode(x)
+        z,mu,logvar = self.reparametrize(xlatent)
+        x = self.decode(self.unflat(z), x11,x9,x7,x5,x3,x1)
         return x, mu,logvar
 
-    def loss_function(recon_x, x, mu, logvar):
-        """
-        recon_x: generating images
-        x: origin images
-        mu: latent mean
-        logvar: latent log variance
-        """
-        BCE = nn.MSELoss(recon_x, x,size_average=False)  # mse loss
-        # loss = 0.5 * sum(1 + log(sigma^2) - mu^2 - sigma^2)
-        KLD_element = mu.pow(2).add_(logvar.exp()).mul_(-1).add_(1).add_(logvar)
-        KLD = torch.sum(KLD_element).mul_(-0.5)
-        # KL divergence
+
+    def loss_function(self, reco_x, x, mu, logvar):
+        BCE = F.binary_cross_entropy(reco_x, x, size_average=False)
+
+                # see Appendix B from VAE paper:
+                    # Kingma and Welling. Auto-Encoding Variational Bayes. ICLR, 2014
+                    # https://arxiv.org/abs/1312.6114
+                    # 0.5 * sum(1 + log(sigma^2) - mu^2 - sigma^2)
+        KLD = -0.5 * torch.sum(1 + logvar - mu.pow(2) - logvar.exp())
         return BCE + KLD

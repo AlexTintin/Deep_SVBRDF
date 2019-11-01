@@ -6,6 +6,7 @@ from src import dataloader
 from torchvision import transforms, utils
 from torch.utils.data import Dataset, DataLoader
 from src.Model_Unet import *
+from src.VAE import *
 import torch.optim as optim
 from torch.utils.tensorboard import SummaryWriter
 import random

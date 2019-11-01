@@ -59,8 +59,9 @@ class Dataloader(Dataset):
         else:
             img_name = self.dico[idx]["nom_file"]
         image = io.imread(img_name)
-        input = image[:,:288,:]
-        normals = image[:,288:2*288,:]
+        delta = int(32/2)
+        input = image[delta:-delta,delta:288-delta,:]
+        normals = image[delta:-delta,288+delta:2*288-delta,:]
         diffuse = image[:,2*288:3 * 288,:]
         roughness = image[:,3*288:4 * 288,:]
         specular = image[:,4*288:5 * 288,:]

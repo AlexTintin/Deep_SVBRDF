@@ -8,6 +8,7 @@ from torch.utils.data import Dataset, DataLoader
 from src.model_AE_Linear import *
 from src.model_AE import *
 from src.Model_Unet import *
+from src.VAE import *
 from src.Modified_Unet import *
 import torch.optim as optim
 from torch.utils.tensorboard import SummaryWriter
@@ -47,7 +48,7 @@ dataloadered_test = DataLoader(dataload_test, batch_size=config.train.batch_size
 
 # Charger le model
 print("Load model")
-net = Unet() #Unetglobal() #autoencoder()
+net = Unet()#Unetglobal()#Unet() #Unetglobal() #autoencoder()
 net.to(device)
 # criterion : mean square error
 criterion = nn.L1Loss()
@@ -71,7 +72,6 @@ if config.train.real_training==False:
     print()
     os.chdir('../../../')
     # lancer l'entrainement du model
-
     best_model = train_model(config, writer, net, dataloaders, criterion, optimizer, device)
     print('Finished Training')
 
