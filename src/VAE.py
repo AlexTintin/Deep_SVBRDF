@@ -47,7 +47,7 @@ class VUnet(nn.Module):
         self.up4 = doubleConv(512+256, 256)
         self.up5 = doubleConv(256+128, 128)
         self.up6 = doubleConv(128+64, 64)
-        self.outc = nn.Conv2d(64, 3, kernel_size=1)
+        self.outc = nn.Conv2d(64, 9, kernel_size=1)
         self.maxpool = nn.MaxPool2d(2, 2)
         self.unmawpool = nn.Upsample(scale_factor=2, mode='bilinear', align_corners=True)
         self.flat = Flatten()
@@ -97,9 +97,9 @@ class VUnet(nn.Module):
 
     def forward(self, x):
         xlatent, x11,x9,x7,x5,x3,x1 = self.encode(x)
-        z,mu,logvar = self.reparametrize(xlatent)
-        x = self.decode(self.unflat(z), x11,x9,x7,x5,x3,x1)
-        return x, mu,logvar
+        #z,mu,logvar = self.reparametrize(xlatent)
+        x = self.decode(xlatent, x11,x9,x7,x5,x3,x1)
+        return x#, mu,logvar
 
 
     def loss_function(self, reco_x, x, mu, logvar):

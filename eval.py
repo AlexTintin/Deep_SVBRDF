@@ -41,30 +41,32 @@ print("Load data")
 trans_all = transforms.Compose([
         transforms.ToTensor()
     ])
+dataload_test = dataloader.Dataloader(config, phase = "test", transform=trans_all)
+dataloadered_test = DataLoader(dataload_test, batch_size=config.train.batch_size,
+                        shuffle=True, num_workers=config.train.num_workers)
 
 dataload_val = dataloader.Dataloader(config, phase = "val", transform=trans_all)
 dataloadered_val = DataLoader(dataload_val, batch_size=config.train.batch_size,
                         shuffle=True, num_workers=config.train.num_workers)
-dataload_test = dataloader.Dataloader(config, phase = "test", transform=trans_all)
-dataloadered_test = DataLoader(dataload_test, batch_size=config.train.batch_size,
-                        shuffle=True, num_workers=config.train.num_workers)
-dataload_train = dataloader.Dataloader(config, phase = "train", transform=trans_all)
+
+
+dataload_train = dataloader.Dataloader(config, phase = "train",iteration=47,period = 'eval', transform=trans_all)
 dataloadered_train = DataLoader(dataload_train, batch_size=config.train.batch_size,
                         shuffle=True, num_workers=config.train.num_workers)
 dataloaders = {'train': dataloadered_train, 'val': dataloadered_val, 'test':dataloadered_test}
 # get some random training images
-os.chdir('../../../')
+os.chdir('../')
 dataiter = iter(dataloadered_train)
 sample = dataiter.next()
 images, labels = sample["input"], sample["label"]
 print("End Load data")
 print()
 print("Load model")
-the_model = Unet()
+the_model = VUnet()
 the_model.to(device)
 writer.add_graph(the_model, images.float().to(device))
 writer.close()
-the_model.load_state_dict(torch.load(config.path.result_path_model, map_location=torch.device('cpu')))
+the_model.load_state_dict(torch.load(config.path.load_path, map_location=torch.device('cpu')))
 the_model.eval()
 print("End model")
 
@@ -75,16 +77,37 @@ sortie_to_plot = the_model(images.float().to(device))
 
 # create grid of images
 img_grid = torchvision.utils.make_grid(images)
-img_grid_labels = torchvision.utils.make_grid(labels)
-img_grid_sortie_to_plot = torchvision.utils.make_grid(sortie_to_plot)
+img_grid_labels_normals = torchvision.utils.make_grid(torch.cat([labels[:,:2,:,:],torch.ones((config.train.batch_size,1,256,256))],dim=1))
+img_grid_sortie_to_plot_normals = torchvision.utils.make_grid(torch.cat([sortie_to_plot[:,:2,:,:].cpu().detach(),torch.ones((config.train.batch_size,1,256,256))],dim=1))
+img_grid_labels2 = torchvision.utils.make_grid(labels[:,2:5,:,:])
+img_grid_sortie_to_plot2 = torchvision.utils.make_grid(sortie_to_plot[:,2:5,:,:])
+img_grid_labels3 = torchvision.utils.make_grid(torch.cat([labels[:,5:6,:,:],labels[:,5:6,:,:],labels[:,5:6,:,:]],dim=1))
+img_grid_sortie_to_plot3 = torchvision.utils.make_grid(torch.cat([sortie_to_plot[:,5:6,:,:],sortie_to_plot[:,5:6,:,:],sortie_to_plot[:,5:6,:,:]],dim=1))
+img_grid_labels4 = torchvision.utils.make_grid(labels[:,6:,:,:])
+img_grid_sortie_to_plot4 = torchvision.utils.make_grid(sortie_to_plot[:,6:,:,:])
+
 # show images
 matplotlib_imshow(img_grid, one_channel=False)
 plt.show()
-matplotlib_imshow(img_grid_labels, one_channel=False)
+matplotlib_imshow(img_grid_labels_normals, one_channel=False)
 plt.show()
-matplotlib_imshow(img_grid_sortie_to_plot.cpu().detach(), one_channel=False)
+matplotlib_imshow(img_grid_sortie_to_plot_normals.cpu().detach(), one_channel=False)
+plt.show()
+
+matplotlib_imshow(img_grid_labels2, one_channel=False)
+plt.show()
+matplotlib_imshow(img_grid_sortie_to_plot2.cpu().detach(), one_channel=False)
+plt.show()
+matplotlib_imshow(img_grid_labels3, one_channel=False)
+plt.show()
+matplotlib_imshow(img_grid_sortie_to_plot3.cpu().detach(), one_channel=False)
+plt.show()
+matplotlib_imshow(img_grid_labels4, one_channel=False)
+plt.show()
+matplotlib_imshow(img_grid_sortie_to_plot4.cpu().detach(), one_channel=False)
 plt.show()
 # write to tensorboard
+
 writer.add_image('4_images_of_dataset_input', img_grid)
-writer.add_image('4_images_of_dataset_output', img_grid_labels)
-writer.add_image('4_images_of_model_output', img_grid_sortie_to_plot)
+writer.add_image('4_images_of_dataset_output', img_grid_labels_normals)
+writer.add_image('4_images_of_model_output', img_grid_sortie_to_plot_normals)

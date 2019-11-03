@@ -13,7 +13,7 @@ import glob, os
 class Dataloader(Dataset):
     """Face Landmarks dataset."""
 
-    def __init__(self, config, phase,iteration=0, transform=None):
+    def __init__(self, config, phase,iteration=0, period='nul', transform=None):
         """
         Args:
             csv_file (string): Path to the csv file with annotations.
@@ -26,18 +26,18 @@ class Dataloader(Dataset):
         self.totiter = config.train.trainset_division
         self.iter = iteration
         self.realdata = config.train.real_training
-        if ((phase == "train") & (iteration==0)):
-            data_path = config.path.data_path_train
-            os.chdir('../../../'+data_path)
-        elif(phase == "train"):
+        self.period = period
+        if(phase == "train"):
             data_path = config.path.data_path_train
             os.chdir(data_path)
         if phase == "val":
             data_path = config.path.data_path_val
+            #os.chdir(data_path)
             os.chdir(data_path)
         if phase == "test":
             data_path = config.path.data_path_test
-            os.chdir('../../../'+data_path)
+            #os.chdir('../../../'+data_path)
+            os.chdir(data_path)
         for index_file, file in enumerate(glob.glob("*.png")):
             split_name = file.split(";")
             data_dico[index_file] = {'nom_file': data_path+"/"+file, "id": int(split_name[0]),
@@ -60,16 +60,16 @@ class Dataloader(Dataset):
             img_name = self.dico[idx]["nom_file"]
         image = io.imread(img_name)
         delta = int(32/2)
-        input = image[delta:-delta,delta:288-delta,:]
-        normals = image[delta:-delta,288+delta:2*288-delta,:]
-        diffuse = image[:,2*288:3 * 288,:]
-        roughness = image[:,3*288:4 * 288,:]
-        specular = image[:,4*288:5 * 288,:]
-        #label = np.concatenate((normals,diffuse,roughness,specular),axis = 2)
+        input = (image[delta:-delta,delta:288-delta,:]/255)*2-1
+        normals = image[delta:-delta,288+delta:2*288-delta,:2]
+        diffuse = image[delta:-delta,2*288+delta:3 * 288-delta,:]
+        roughness = image[delta:-delta,3*288+delta:4 * 288-delta,:1]
+        specular = image[delta:-delta,4*288+delta:5 * 288-delta,:]
+        label = np.concatenate((normals,diffuse,roughness,specular),axis = 2)
         if self.transform:
             input_t = self.transform(input)
-            normals_t = self.transform(normals)
+            normals_t = self.transform(label)#normals
             sample = {'input': input_t, 'label': normals_t}
         else:
-            sample = {'input': input, 'label': normals}
+            sample = {'input': input, 'label': label}
         return sample
