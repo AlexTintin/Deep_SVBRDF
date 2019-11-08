@@ -8,7 +8,20 @@ from torch.utils.data import Dataset, DataLoader
 from torchvision import transforms, utils
 import glob, os
 
+from src.rendering_loss import *
+import torchvision
+import matplotlib.pyplot as plt
 
+
+def matplotlib_imshow(img, one_channel=False):
+    if one_channel:
+        img = img.mean(dim=0)
+    img = img / 2 + 0.5  # unnormalize
+    npimg = img.numpy()
+    if one_channel:
+        plt.imshow(npimg, cmap="Greys")
+    else:
+        plt.imshow(np.transpose(npimg, (1, 2, 0)))
 
 class Dataloader(Dataset):
     """Face Landmarks dataset."""
@@ -48,28 +61,37 @@ class Dataloader(Dataset):
         self.transform = transform
 
     def __len__(self):
-        if ((self.phase == "train") & self.realdata==True):
+        if ((self.phase == "train") & (self.realdata==True)):
             return int((len(self.dico)-1)/self.totiter)
         else:
-            return (len(self.dico) - 1)
+            return (len(self.dico))
 
     def __getitem__(self, idx):
-        if ((self.phase == "train") & self.realdata==True):
+        if ((self.phase == "train") & (self.realdata==True)):
             img_name = self.dico[int((len(self.dico)-1)/self.totiter)*self.iter+idx]["nom_file"]
         else:
             img_name = self.dico[idx]["nom_file"]
         image = io.imread(img_name)
         delta = int(32/2)
-        input = (image[delta:-delta,delta:288-delta,:]/255)*2-1
-        normals = image[delta:-delta,288+delta:2*288-delta,:2]
-        diffuse = image[delta:-delta,2*288+delta:3 * 288-delta,:]
-        roughness = image[delta:-delta,3*288+delta:4 * 288-delta,:1]
-        specular = image[delta:-delta,4*288+delta:5 * 288-delta,:]
+        input = (np.log(image[delta:-delta,delta:288-delta,:]/255+0.01)-np.log(0.01))/(np.log(1.01)-np.log(0.01))
+        normals = (image[delta:-delta,288+delta:2*288-delta,:]/255)*2-1
+        diffuse = (image[delta:-delta,2*288+delta:3 * 288-delta,:]/255)*2-1
+        roughness = (image[delta:-delta,3*288+delta:4 * 288-delta,:1]/255)*2-1
+        specular = (image[delta:-delta,4*288+delta:5 * 288-delta,:]/255)*2-1
         label = np.concatenate((normals,diffuse,roughness,specular),axis = 2)
+
+        '''
+        list_light, list_view = get_wlvs_np(256, 10)
+        for j in range(1):
+            light = list_light[j]
+            C = render_np(normals,diffuse,roughness,specular, light[1], light[0], roughness_factor=0.0)
+            plt.imshow(C)
+            plt.show()
+        '''
         if self.transform:
             input_t = self.transform(input)
             normals_t = self.transform(label)#normals
             sample = {'input': input_t, 'label': normals_t}
         else:
-            sample = {'input': input, 'label': label}
+            sample = {'input': input, 'label': normals}
         return sample

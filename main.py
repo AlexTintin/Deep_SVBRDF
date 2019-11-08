@@ -54,7 +54,7 @@ net.to(device)
 criterion = nn.L1Loss()
 #optimizer of Adam
 optimizer = torch.optim.Adam(net.parameters(), lr=config.train.learning_rate,
-weight_decay=config.train.weight_decay)
+            weight_decay=config.train.weight_decay)
 print("End Load model")
 print()
 
@@ -63,7 +63,7 @@ if config.train.real_training==False:
 
     dataload_train = dataloader.Dataloader(config, phase = "train",period = 'main', transform=trans_all)
     dataloadered_train = DataLoader(dataload_train, batch_size=config.train.batch_size,
-                                shuffle=True, num_workers=config.train.num_workers)
+                                    shuffle=True, num_workers=config.train.num_workers)
     dataloaders = {'train': dataloadered_train, 'val': dataloadered_val, 'test':dataloadered_test}
     print("End Load data")
     print()
@@ -71,35 +71,16 @@ if config.train.real_training==False:
     print("Start training model")
     print()
     os.chdir('../../../')
+
+    if config.train.rendering_loss:
     # lancer l'entrainement du model
-    best_model = train_model(config, writer, net, dataloaders, criterion, optimizer, device)
+        best_model = train_model_rendring_loss(config, writer, net, dataloaders, criterion, optimizer, device)
+    else:
+        best_model = train_model(config, writer, net, dataloaders, criterion, optimizer, device)
     print('Finished Training')
 
 
 else:
-    '''
-    for i in range(config.train.trainset_division):
-        # Charger les dataloaders des 3 phases train / val / test
-        dataload_train = dataloader.Dataloader(config, phase = "train",iteration = i,period = 'main', transform=trans_all)
-        dataloadered_train = DataLoader(dataload_train, batch_size=config.train.batch_size,
-                                shuffle=True, num_workers=config.train.num_workers)
-
-        # Dataloaders est 1 dictionnaire qui contient les 3 dataloaders
-        dataloaders = {'train': dataloadered_train, 'val': dataloadered_val, 'test':dataloadered_test}
-        print("End Load data")
-        print()
-
-        print("Start training model")
-        print()
-        os.chdir('../')
-        # lancer l'entrainement du model
-        if i==0:
-            model,best_loss, last_running_loss, best_model_wts,nbre_sample = train_model_init(config, writer, net, dataloaders, criterion, optimizer, device)
-        else:
-            model,best_loss, last_running_loss, best_model_wts,nbre_sample = train_model_iter(config, writer, model, dataloadered_val, criterion, optimizer,
-             device, best_loss, last_running_loss, best_model_wts,nbre_sample)
-             
-    '''
     print("Start training model")
     print()
     os.chdir('../')
