@@ -18,7 +18,7 @@ from utils.tools import *
 def matplotlib_imshow(img, one_channel=False):
     if one_channel:
         img = img.mean(dim=0)
-    img = img / 2 + 0.5     # unnormalize
+   # img = img / 2 + 0.5     # unnormalize
     npimg = img.numpy()
     if one_channel:
         plt.imshow(npimg, cmap="Greys")
@@ -81,12 +81,12 @@ img_grid = torchvision.utils.make_grid(images)#(np.log(images+0.01)-np.log(0.01)
 img_grid_labels_normals = torchvision.utils.make_grid(deprocess(labels[:,:3,:,:]))#torchvision.utils.make_grid(torch.cat([labels[:,:2,:,:],torch.ones((config.train.batch_size,1,256,256))],dim=1))
 img_grid_sortie_to_plot_normals =torchvision.utils.make_grid(deprocess(sortie_to_plot[:,:3,:,:].cpu().detach()))
 
-img_grid_labels2 = torchvision.utils.make_grid(deprocess(labels[:,3:6,:,:]))
-img_grid_sortie_to_plot2 = torchvision.utils.make_grid(deprocess(sortie_to_plot[:,3:6,:,:]))
-img_grid_labels3 = torchvision.utils.make_grid(deprocess(torch.cat([labels[:,6:7,:,:],labels[:,6:7,:,:],labels[:,6:7,:,:]],dim=1)))
-img_grid_sortie_to_plot3 = torchvision.utils.make_grid(deprocess(torch.cat([sortie_to_plot[:,6:7,:,:],sortie_to_plot[:,6:7,:,:],sortie_to_plot[:,6:7,:,:]],dim=1)))
-img_grid_labels4 = torchvision.utils.make_grid(deprocess(labels[:,7:,:,:]))
-img_grid_sortie_to_plot4 = torchvision.utils.make_grid(deprocess(sortie_to_plot[:,7:,:,:]))
+img_grid_labels2 = torchvision.utils.make_grid((labels[:,3:6,:,:]))
+img_grid_sortie_to_plot2 = torchvision.utils.make_grid((sortie_to_plot[:,3:6,:,:]))
+img_grid_labels3 = torchvision.utils.make_grid((torch.cat([labels[:,6:7,:,:],labels[:,6:7,:,:],labels[:,6:7,:,:]],dim=1)))
+img_grid_sortie_to_plot3 = torchvision.utils.make_grid((torch.cat([sortie_to_plot[:,6:7,:,:],sortie_to_plot[:,6:7,:,:],sortie_to_plot[:,6:7,:,:]],dim=1)))
+img_grid_labels4 = torchvision.utils.make_grid((labels[:,7:,:,:]))
+img_grid_sortie_to_plot4 = torchvision.utils.make_grid((sortie_to_plot[:,7:,:,:]))
 
 # show images
 matplotlib_imshow(img_grid, one_channel=False)

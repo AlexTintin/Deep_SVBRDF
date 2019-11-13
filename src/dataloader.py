@@ -74,12 +74,11 @@ class Dataloader(Dataset):
         image = io.imread(img_name)
         delta = int(32/2)
         input = (np.log(image[delta:-delta,delta:288-delta,:]/255+0.01)-np.log(0.01))/(np.log(1.01)-np.log(0.01))
-        normals = (image[delta:-delta,288+delta:2*288-delta,:]/255)*2-1
-        diffuse = (image[delta:-delta,2*288+delta:3 * 288-delta,:]/255)*2-1
-        roughness = (image[delta:-delta,3*288+delta:4 * 288-delta,:1]/255)*2-1
-        specular = (image[delta:-delta,4*288+delta:5 * 288-delta,:]/255)*2-1
+        normals = (image[delta:-delta,288+delta:2*288-delta,:]/255)
+        diffuse = (image[delta:-delta,2*288+delta:3 * 288-delta,:]/255)
+        roughness = (image[delta:-delta,3*288+delta:4 * 288-delta,:1]/255)
+        specular = (image[delta:-delta,4*288+delta:5 * 288-delta,:]/255)
         label = np.concatenate((normals,diffuse,roughness,specular),axis = 2)
-
         '''
         list_light, list_view = get_wlvs_np(256, 10)
         for j in range(1):
@@ -87,7 +86,7 @@ class Dataloader(Dataset):
             C = render_np(normals,diffuse,roughness,specular, light[1], light[0], roughness_factor=0.0)
             plt.imshow(C)
             plt.show()
-        '''
+            '''
         if self.transform:
             input_t = self.transform(input)
             normals_t = self.transform(label)#normals

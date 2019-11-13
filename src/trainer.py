@@ -85,6 +85,8 @@ def train_model_rendring_loss(config, writer, model, dataloaders, criterion, opt
                         viewlight = list_light[j]
                         A = render(outputs, viewlight[1], viewlight[0], roughness_factor=0.0)
                         B = render(labels, viewlight[1], viewlight[0],roughness_factor=0.0)
+                       # matplotlib_imshow(torchvision.utils.make_grid(B), one_channel=False)
+                       # plt.show()
                         loss_ren += L1LogLoss(A, B)
                     #take the mean loss
                     loss = loss_ren / 9
@@ -194,6 +196,7 @@ def train_model(config, writer, model, dataloaders, criterion, optimizer, device
     #save
     torch.save(model.state_dict(), config.path.result_path_model)
     return model
+
 
 
 def train_model_full(config, writer, model, dataloadered_val, criterion, optimizer, device):

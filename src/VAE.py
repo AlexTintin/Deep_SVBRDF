@@ -2,6 +2,7 @@ import torch.nn as nn
 import torch
 from torch.autograd import Variable
 from torch.nn import functional as F
+from torchvision import datasets, models, transforms
 
 class Flatten(nn.Module):
     def forward(self, input):

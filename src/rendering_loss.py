@@ -17,15 +17,17 @@ trans_all = transforms.Compose([
         transforms.ToTensor()
     ])
 
-def matplotlib_imshow(img, one_channel=False):
+def matplotlib_imshow(img, one_channel=False,legend = ''):
     if one_channel:
         img = img.mean(dim=0)
     #img = img / 2 + 0.5     # unnormalize
     npimg = img.numpy()
     if one_channel:
         plt.imshow(npimg, cmap="Greys")
+
     else:
         plt.imshow(np.transpose(npimg, (1, 2, 0)))
+        plt.title(legend)
 
 def L1Loss(inputs, targets, weight = 1.0):
     diff = torch.abs(inputs - targets)
@@ -60,7 +62,7 @@ def render(inputs, l, v,roughness_factor=0.0):
 
 
     #normal, diffuse, roughness, specular = torch.split(inputs, 4, axis=-1)
-    normal = inputs[:, :3, :, :]
+    normal = inputs[:, 0:3, :, :]
     diffuse = inputs[:, 3:6, :, :]
     roughness = torch.cat([inputs[:,6:7,:,:],inputs[:,6:7,:,:],inputs[:,6:7,:,:]],dim=1)
     specular = inputs[:, 7:, :, :]
@@ -89,9 +91,9 @@ def render(inputs, l, v,roughness_factor=0.0):
     for i in range(normal_size[0]):
 
         n = tensor_norm(normal[i,:,:,:])
-        s = deprocess(specular[i,:,:,:])
-        d = deprocess(diffuse[i,:,:,:])
-        r = deprocess(roughness[i,:,:,:])
+        s = specular[i,:,:,:]
+        d = diffuse[i,:,:,:]
+        r = roughness[i,:,:,:]
 
         NoV = tensor_dot(n, v1)
         NoH = tensor_dot(n, h)
