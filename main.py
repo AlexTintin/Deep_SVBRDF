@@ -15,6 +15,7 @@ from torch.utils.tensorboard import SummaryWriter
 import random
 import numpy as np
 from src.trainer import *
+from src.VGG16Loss import *
 
 # Device = cpu ou cuda
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
@@ -51,7 +52,7 @@ print("Load model")
 net = VUnet()#Unetglobal()#Unet() #Unetglobal() #autoencoder()
 net.to(device)
 # criterion : mean square error
-criterion = nn.L1Loss()
+criterion = VGG16loss(device)  # nn.L1Loss()
 #optimizer of Adam
 optimizer = torch.optim.Adam(net.parameters(), lr=config.train.learning_rate,
             weight_decay=config.train.weight_decay)

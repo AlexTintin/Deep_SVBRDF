@@ -118,7 +118,6 @@ def train_model_rendring_loss(config, writer, model, dataloaders, criterion, opt
     torch.save(model.state_dict(), config.path.result_path_model)
     return model
 
-
 def train_model(config, writer, model, dataloaders, criterion, optimizer, device):
     """
     input :
@@ -166,7 +165,7 @@ def train_model(config, writer, model, dataloaders, criterion, optimizer, device
                     #outputs, mean, var = model(inputs)
                     #outputs = model(inputs,torch.mean(torch.mean(inputs, dim=2),dim=2))
                     outputs = model(inputs)
-                    loss = criterion(outputs, labels)#-0.5 * torch.sum(1 + var - mean.pow(2) - var.exp())
+                    loss = criterion.lossVGG16(outputs, labels)#-0.5 * torch.sum(1 + var - mean.pow(2) - var.exp())
                     #outputs = model(inputs, (torch.mean(torch.mean(inputs, dim=2),dim=2)))
                     #loss = criterion(outputs, labels)
                     # backward + optimize only if in training phase
