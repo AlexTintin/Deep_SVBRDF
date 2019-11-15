@@ -14,11 +14,26 @@ class VGG16loss():
         for param in vgg16.parameters():
             param.requires_grad = False
         self.model = vgg16
+        self.normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406],
+                                         std=[0.229, 0.224, 0.225])
 
-
-    def lossVGG16(self, target, label):
+    def lossVGG16_l1(self, target, label):
+        target_rec = reconstruct_output(target)
+        label_rec = reconstruct_output(label)
+        out_target = torch.zeros((4,100))
+        out_label = torch.zeros((4,100))
+        moy = torch.zeros((4,100))
+        for i in range(4):
+            target_rec[i] = self.normalize(target_rec[i])
+            label_rec[i] = self.normalize(label_rec[i])
+            out_target[i] = self.model(target_rec[i])
+            out_label[i] = self.model(label_rec[i])
+            moy+= torch.abs(out_target[i]-out_label[i])
+        return torch.mean(moy)
+        '''
         target_normal, target_diffuse, target_rough, target_spec = reconstruct_output(target)
         label_normal, label_diffuse, label_rough, label_spec = reconstruct_output(label)
+        
         out_target_normal = self.model(target_normal)
         out_target_diffuse = self.model(target_diffuse)
         out_target_rough = self.model(target_rough)
@@ -31,3 +46,8 @@ class VGG16loss():
                           +torch.abs(out_target_diffuse - out_label_diffuse)
                           +torch.abs(out_target_rough - out_label_rough)
                           +torch.abs(out_target_spec - out_label_spec))
+        '''
+    def lossVGG16_rendering(self, target, label):
+        out_label = self.model(label)
+        out_target = self.model(target)
+        return torch.mean(torch.abs(out_label - out_target))

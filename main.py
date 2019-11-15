@@ -52,7 +52,8 @@ print("Load model")
 net = VUnet()#Unetglobal()#Unet() #Unetglobal() #autoencoder()
 net.to(device)
 # criterion : mean square error
-criterion = VGG16loss(device)  # nn.L1Loss()
+criterion =  nn.L1Loss()
+criterion2 = VGG16loss(device)
 #optimizer of Adam
 optimizer = torch.optim.Adam(net.parameters(), lr=config.train.learning_rate,
             weight_decay=config.train.weight_decay)
@@ -75,7 +76,7 @@ if config.train.real_training==False:
 
     if config.train.rendering_loss:
     # lancer l'entrainement du model
-        best_model = train_model_rendring_loss(config, writer, net, dataloaders, criterion, optimizer, device)
+        best_model = train_model_rendring_loss(config, writer, net, dataloaders, criterion,criterion2, optimizer, device)
     else:
         best_model = train_model(config, writer, net, dataloaders, criterion, optimizer, device)
     print('Finished Training')

@@ -28,7 +28,7 @@ trans_all = transforms.Compose([
         transforms.ToTensor()
     ])
 
-def train_model_rendring_loss(config, writer, model, dataloaders, criterion, optimizer, device):
+def train_model_rendring_loss(config, writer, model, dataloaders, criterion,criterion2, optimizer, device):
     """
     input :
         config: dictionnaire qui contient les fig
@@ -52,8 +52,6 @@ def train_model_rendring_loss(config, writer, model, dataloaders, criterion, opt
     n_batches = config.train.batch_size
     num_epochs = config.train.num_epochs
 
-    #rendering loss init light and viewing
-    list_light,list_view = get_wlvs_np(256,10)
 
     #début de l'entrainement
     for epoch in range(num_epochs):
@@ -66,10 +64,16 @@ def train_model_rendring_loss(config, writer, model, dataloaders, criterion, opt
             else:
                 model.eval()   # Set model to evaluate mode
             #initialisation des variables
+            running_loss1 = 0.0
+            running_loss2 = 0.0
+            running_loss3 = 0.0
+            running_loss4 = 0.0
             running_loss = 0.0
             running_corrects = 0
             nbre_sample = 0
             # Iterate over data.
+            # rendering loss init light and viewing
+            list_light, list_view = get_wlvs_np(256, 10)
             for index_data, data in enumerate(dataloaders[phase]):
                 # get the inputs; data is a list of [inputs, labels]
                 inputs, labels = data["input"].float().to(device), data["label"].float().to(device)
@@ -81,32 +85,69 @@ def train_model_rendring_loss(config, writer, model, dataloaders, criterion, opt
                     outputs = model(inputs)
                     loss_ren = 0.0
                     #rendering loss iterate over 10 different light and view positions
-                    for j in range(10):
+                    for j in range(5):
                         viewlight = list_light[j]
                         A = render(outputs, viewlight[1], viewlight[0], roughness_factor=0.0)
                         B = render(labels, viewlight[1], viewlight[0],roughness_factor=0.0)
-                       # matplotlib_imshow(torchvision.utils.make_grid(B), one_channel=False)
-                       # plt.show()
+                        #matplotlib_imshow(torchvision.utils.make_grid(B), one_channel=False)
+                        #plt.show()
                         loss_ren += L1LogLoss(A, B)
                     #take the mean loss
-                    loss = loss_ren / 9
+                    loss1 = loss_ren / 5
+                    loss2 = criterion(outputs, labels)
+                    loss3 = criterion2.lossVGG16_l1(outputs, labels)
+                    loss4 = criterion2.lossVGG16_rendering(outputs, labels)
+                    if epoch < 15000:
+                        loss = loss2
+                    else :
+                        loss = loss1
                     # backward + optimize only if in training phase
                     if phase == 'train':
                         loss.backward()
                         optimizer.step()
                 # statistics
                 running_loss += loss.item() * n_batches
+                running_loss1 += loss1.item() * n_batches
+                running_loss2 += loss2.item() * n_batches
+                running_loss3 += loss3.item() * n_batches
+                running_loss4 += loss4.item() * n_batches
                 nbre_sample += n_batches
             epoch_loss = running_loss / nbre_sample
+            epoch_loss1 = running_loss1 / nbre_sample
+            epoch_loss2 = running_loss2 / nbre_sample
+            epoch_loss3 = running_loss3 / nbre_sample
+            epoch_loss4 = running_loss4 / nbre_sample
             print('{} Loss: {:.4f}'.format(
                 phase, epoch_loss))
-            writer.add_scalar(phase + ' loss',
-                            epoch_loss,
+            writer.add_scalar(phase + ' loss_l1',
+                            epoch_loss2,
                             epoch)
+            writer.add_scalar(phase + ' loss_rendering',
+                              epoch_loss1,
+                              epoch)
+            writer.add_scalar(phase + ' loss_deep_l1',
+                              epoch_loss3,
+                              epoch)
+            writer.add_scalar(phase + ' loss_deep_rendering',
+                              epoch_loss4,
+                              epoch)
+            writer.add_scalar(phase + ' loss',
+                              epoch_loss,
+                              epoch)
             # deep copy the model
             if epoch_loss < best_loss:
                 best_loss = epoch_loss
                 best_model_wts = copy.deepcopy(model.state_dict())
+        if epoch==14999:
+            print()
+            time_elapsed = time.time() - since
+            print('Training complete in {:.0f}m {:.0f}s'.format(
+                time_elapsed // 60, time_elapsed % 60))
+            print('Best val Loss: {:4f}'.format(best_loss))
+            model.load_state_dict(best_model_wts)
+            # save
+            torch.save(model.state_dict(), config.path.result_path_model + 'l1_15000')
+            best_loss =10000
     print()
     time_elapsed = time.time() - since
     print('Training complete in {:.0f}m {:.0f}s'.format(
@@ -165,7 +206,7 @@ def train_model(config, writer, model, dataloaders, criterion, optimizer, device
                     #outputs, mean, var = model(inputs)
                     #outputs = model(inputs,torch.mean(torch.mean(inputs, dim=2),dim=2))
                     outputs = model(inputs)
-                    loss = criterion.lossVGG16(outputs, labels)#-0.5 * torch.sum(1 + var - mean.pow(2) - var.exp())
+                    loss = criterion(outputs, labels)#-0.5 * torch.sum(1 + var - mean.pow(2) - var.exp())
                     #outputs = model(inputs, (torch.mean(torch.mean(inputs, dim=2),dim=2)))
                     #loss = criterion(outputs, labels)
                     # backward + optimize only if in training phase
