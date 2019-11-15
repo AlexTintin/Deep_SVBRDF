@@ -28,7 +28,7 @@ trans_all = transforms.Compose([
         transforms.ToTensor()
     ])
 
-def train_model_rendring_loss(config, writer, model, dataloaders, criterion,criterion2, optimizer, device):
+def train_model_rendring_loss(config, writer, model, dataloaders, criterion, optimizer, device):
     """
     input :
         config: dictionnaire qui contient les fig
@@ -66,8 +66,8 @@ def train_model_rendring_loss(config, writer, model, dataloaders, criterion,crit
             #initialisation des variables
             running_loss1 = 0.0
             running_loss2 = 0.0
-            running_loss3 = 0.0
-            running_loss4 = 0.0
+            #running_loss3 = 0.0
+            #running_loss4 = 0.0
             running_loss = 0.0
             running_corrects = 0
             nbre_sample = 0
@@ -95,8 +95,8 @@ def train_model_rendring_loss(config, writer, model, dataloaders, criterion,crit
                     #take the mean loss
                     loss1 = loss_ren / 5
                     loss2 = criterion(outputs, labels)
-                    loss3 = criterion2.lossVGG16_l1(outputs, labels)
-                    loss4 = criterion2.lossVGG16_rendering(outputs, labels)
+                   # loss3 = criterion2.lossVGG16_l1(outputs, labels)
+                    #loss4 = criterion2.lossVGG16_rendering(A, B)
                     if epoch < 15000:
                         loss = loss2
                     else :
@@ -109,14 +109,14 @@ def train_model_rendring_loss(config, writer, model, dataloaders, criterion,crit
                 running_loss += loss.item() * n_batches
                 running_loss1 += loss1.item() * n_batches
                 running_loss2 += loss2.item() * n_batches
-                running_loss3 += loss3.item() * n_batches
-                running_loss4 += loss4.item() * n_batches
+                #running_loss3 += loss3.item() * n_batches
+                #running_loss4 += loss4.item() * n_batches
                 nbre_sample += n_batches
             epoch_loss = running_loss / nbre_sample
             epoch_loss1 = running_loss1 / nbre_sample
             epoch_loss2 = running_loss2 / nbre_sample
-            epoch_loss3 = running_loss3 / nbre_sample
-            epoch_loss4 = running_loss4 / nbre_sample
+            #epoch_loss3 = running_loss3 / nbre_sample
+           # epoch_loss4 = running_loss4 / nbre_sample
             print('{} Loss: {:.4f}'.format(
                 phase, epoch_loss))
             writer.add_scalar(phase + ' loss_l1',
@@ -125,12 +125,12 @@ def train_model_rendring_loss(config, writer, model, dataloaders, criterion,crit
             writer.add_scalar(phase + ' loss_rendering',
                               epoch_loss1,
                               epoch)
-            writer.add_scalar(phase + ' loss_deep_l1',
-                              epoch_loss3,
-                              epoch)
-            writer.add_scalar(phase + ' loss_deep_rendering',
-                              epoch_loss4,
-                              epoch)
+           # writer.add_scalar(phase + ' loss_deep_l1',
+            #                  epoch_loss3,
+             #                 epoch)
+          #  writer.add_scalar(phase + ' loss_deep_rendering',
+           #                   epoch_loss4,
+            #                  epoch)
             writer.add_scalar(phase + ' loss',
                               epoch_loss,
                               epoch)

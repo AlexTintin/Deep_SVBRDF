@@ -9,25 +9,24 @@ class VGG16loss():
 
     def __init__(self,device):
         vgg16 = models.vgg16(pretrained=True)
+        self.device = device
         vgg16.to(device)
         vgg16.eval()
         for param in vgg16.parameters():
             param.requires_grad = False
         self.model = vgg16
-        self.normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406],
-                                         std=[0.229, 0.224, 0.225])
+        self.normalize = transforms.Compose([
+            transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])])
 
     def lossVGG16_l1(self, target, label):
         target_rec = reconstruct_output(target)
         label_rec = reconstruct_output(label)
-        out_target = torch.zeros((4,100))
-        out_label = torch.zeros((4,100))
-        moy = torch.zeros((4,100))
+        out_target = torch.zeros((4,1000))
+        out_label = torch.zeros((4,1000))
+        moy = torch.zeros((4,1000))
         for i in range(4):
-            target_rec[i] = self.normalize(target_rec[i])
-            label_rec[i] = self.normalize(label_rec[i])
-            out_target[i] = self.model(target_rec[i])
-            out_label[i] = self.model(label_rec[i])
+            out_target[i] = self.model((self.normalize(target_rec[i].squeeze(0))).unsqueeze(0))
+            out_label[i] = self.model((self.normalize(label_rec[i].squeeze(0))).unsqueeze(0))
             moy+= torch.abs(out_target[i]-out_label[i])
         return torch.mean(moy)
         '''
@@ -48,6 +47,6 @@ class VGG16loss():
                           +torch.abs(out_target_spec - out_label_spec))
         '''
     def lossVGG16_rendering(self, target, label):
-        out_label = self.model(label)
-        out_target = self.model(target)
+        out_label = self.model(self.normalize(label.squeeze(0)).unsqueeze(0).to(self.device))
+        out_target = self.model(self.normalize(target.squeeze(0)).unsqueeze(0).to(self.device))
         return torch.mean(torch.abs(out_label - out_target))
