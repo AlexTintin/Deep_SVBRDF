@@ -18,6 +18,7 @@ from src.trainer import *
 from src.VGG16Loss import *
 
 # Device = cpu ou cuda
+#torch.cuda.empty_cache()
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 #load les parametres dasn un dictionnaire
 config = config()
@@ -52,7 +53,7 @@ print("Load model")
 net = VUnet()#Unetglobal()#Unet() #Unetglobal() #autoencoder()
 net.to(device)
 # criterion : mean square error
-criterion =  nn.L1Loss()
+criterion =  VGG16loss(device)#nn.L1Loss()
 #criterion2 = VGG16loss(device)
 #optimizer of Adam
 optimizer = torch.optim.Adam(net.parameters(), lr=config.train.learning_rate,
@@ -87,6 +88,6 @@ else:
     print()
     os.chdir('../')
     # lancer l'entrainement du model
-    model= train_model_full(config, writer, net,dataloadered_val, criterion,optimizer, device)
+    model= train_model_full(config, writer, net, dataloadered_val, criterion,optimizer, device)
 
     print('Finished Training')
