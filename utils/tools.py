@@ -70,16 +70,18 @@ def reconstruct_output(inputs):
 
         return normal, diffuse, roughness, specular
 
-def save_image(image_init,inputs,rendered,legend):
+def save_image(image_init,inputs,rendered,legend,plot):
     normal = inputs[:, 0:3, :, :]
     diffuse = inputs[:, 3:6, :, :]
     roughness = torch.cat([inputs[:, 6:7, :, :], inputs[:, 6:7, :, :], inputs[:, 6:7, :, :]], dim=1)
     specular = inputs[:, 7:, :, :]
     img = torch.cat([image_init,normal,diffuse,roughness,specular,rendered],axis = 3)
-    img = img / 2 + 0.5     # unnormalize
+   # img = img / 2 + 0.5     # unnormalize
     npimg = img.squeeze(0).cpu().detach().numpy()
     print(np.shape(npimg))
     plt.imshow(np.transpose(npimg, (1, 2, 0)))
+    if plot:
+        plt.show()
     plt.savefig(legend+'.png')
 
 def tsne(latent,i):
@@ -94,4 +96,14 @@ def tsne(latent,i):
     print("t-SNE: %.2g sec" % (t1 - t0))
     plt.scatter(trans_data[0], trans_data[1])
     plt.title("t-SNE (%.2g sec)" % (t1 - t0))
+
+def matplotlib_imshow(img, one_channel=False):
+    if one_channel:
+        img = img.mean(dim=0)
+   # img = img / 2 + 0.5     # unnormalize
+    npimg = img.numpy()
+    if one_channel:
+        plt.imshow(npimg, cmap="Greys")
+    else:
+        plt.imshow(np.transpose(npimg, (1, 2, 0)))
 

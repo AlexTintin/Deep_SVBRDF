@@ -4,6 +4,7 @@ from torch.autograd import Variable
 from torch.nn import functional as F
 from torchvision import datasets, models, transforms
 from utils.tools import *
+from utils import config
 
 
 class VGG16Bottom(nn.Module):

@@ -45,11 +45,9 @@ class Dataloader(Dataset):
             os.chdir(data_path)
         if phase == "val":
             data_path = config.path.data_path_val
-            #os.chdir(data_path)
             os.chdir(data_path)
         if phase == "test":
             data_path = config.path.data_path_test
-            #os.chdir('../../../'+data_path)
             os.chdir(data_path)
         for index_file, file in enumerate(glob.glob("*.png")):
             split_name = file.split(";")
@@ -79,17 +77,10 @@ class Dataloader(Dataset):
         roughness = (image[delta:-delta,3*288+delta:4 * 288-delta,:1]/255)
         specular = (image[delta:-delta,4*288+delta:5 * 288-delta,:]/255)
         label = np.concatenate((normals,diffuse,roughness,specular),axis = 2)
-        '''
-        list_light, list_view = get_wlvs_np(256, 10)
-        for j in range(1):
-            light = list_light[j]
-            C = render_np(normals,diffuse,roughness,specular, light[1], light[0], roughness_factor=0.0)
-            plt.imshow(C)
-            plt.show()
-            '''
+
         if self.transform:
             input_t = self.transform(input)
-            normals_t = self.transform(label)#normals
+            normals_t = self.transform(label)
             sample = {'input': input_t, 'label': normals_t}
         else:
             sample = {'input': input, 'label': normals}

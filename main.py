@@ -18,23 +18,27 @@ from src.trainer import *
 from src.VGG16Loss import *
 
 # Device = cpu ou cuda
-#torch.cuda.empty_cache()
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+
 #load les parametres dasn un dictionnaire
 config = config()
+
 # écrire les logs dans writer pour tensorboard
 writer = SummaryWriter(config.path.logs_tensorboard)
 print()
 print("Use Hardware : ", device)
+
 #Reproductibilites
 random.seed(config.general.seed)
 np.random.seed(config.general.seed)
 torch.manual_seed(config.general.seed)
 torch.backends.cudnn.deterministic = True
 torch.backends.cudnn.benchmark = False
+
 # Load data
 print()
 print("Load data")
+
 # Transforme qui transforme en tensor
 trans_all = transforms.Compose([
         transforms.ToTensor()
@@ -50,14 +54,19 @@ dataloadered_val = DataLoader(dataload_val, batch_size=config.train.batch_size,
 
 # Charger le model
 print("Load model")
-net = VUnet()#Unetglobal()#Unet() #Unetglobal() #autoencoder()
+net = VUnet()
 net.to(device)
-# criterion : mean square error
-criterion =  VGG16loss(device)#nn.L1Loss()
-#criterion2 = VGG16loss(device)
+
+# criterion : see config
+if config.train.loss == 'l1' or config.train.loss == 'rendering':
+    criterion =  nn.L1Loss()
+else:
+    criterion = VGG16loss(device)
+
 #optimizer of Adam
 optimizer = torch.optim.Adam(net.parameters(), lr=config.train.learning_rate,
             weight_decay=config.train.weight_decay)
+
 print("End Load model")
 print()
 
@@ -73,13 +82,13 @@ if config.train.real_training==False:
 
     print("Start training model")
     print()
-    os.chdir('../../../')
-
+    """
     if config.train.rendering_loss:
     # lancer l'entrainement du model
         best_model = train_model_rendring_loss(config, writer, net, dataloaders, criterion, optimizer, device)
     else:
-        best_model = train_model(config, writer, net, dataloaders, criterion, optimizer, device)
+    """
+    best_model = train_model(config, writer, net, dataloaders, criterion, optimizer, device)
     print('Finished Training')
 
 

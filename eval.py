@@ -15,20 +15,10 @@ from src.trainer import train_model
 import torchvision
 from utils.tools import *
 from src.rendering_loss import *
-#import imageio
 from sklearn.decomposition import PCA
+from utils.tools import *
+import matplotlib.image as mpimg
 
-
-
-def matplotlib_imshow(img, one_channel=False):
-    if one_channel:
-        img = img.mean(dim=0)
-   # img = img / 2 + 0.5     # unnormalize
-    npimg = img.numpy()
-    if one_channel:
-        plt.imshow(npimg, cmap="Greys")
-    else:
-        plt.imshow(np.transpose(npimg, (1, 2, 0)))
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 config = config()
@@ -44,9 +34,13 @@ torch.backends.cudnn.benchmark = False
 #Load data
 print()
 print("Load data")
+
+
 trans_all = transforms.Compose([
         transforms.ToTensor()
     ])
+
+
 dataload_test = dataloader.Dataloader(config, phase = "test", transform=trans_all)
 dataloadered_test = DataLoader(dataload_test, batch_size=config.train.batch_size,
                         shuffle=True, num_workers=config.train.num_workers)
@@ -55,29 +49,32 @@ dataload_val = dataloader.Dataloader(config, phase = "val", transform=trans_all)
 dataloadered_val = DataLoader(dataload_val, batch_size=config.train.batch_size,
                         shuffle=True, num_workers=config.train.num_workers)
 
-
-dataload_train = dataloader.Dataloader(config, phase = "train",iteration=107,period = 'eval', transform=trans_all) #67 bizarre #37 pas mal
+dataload_train = dataloader.Dataloader(config, phase = "train", period = 'eval', transform=trans_all) #67 bizarre #37 pas mal
 dataloadered_train = DataLoader(dataload_train, batch_size=config.train.batch_size,
                         shuffle=True, num_workers=config.train.num_workers)
+
+
 dataloaders = {'train': dataloadered_train, 'val': dataloadered_val, 'test':dataloadered_test}
+
+
 # get some random training images
-os.chdir('../')
 dataiter = iter(dataloadered_train)
-#sample = dataiter.next()
-#images, labels = sample["input"], sample["label"]
+sample = dataiter.next()
+images, labels = sample["input"], sample["label"]
 print("End Load data")
 print()
 print("Load model")
 the_model = VUnet()
 the_model.to(device)
-#writer.add_graph(the_model, images.float().to(device))
+writer.add_graph(the_model, images.float().to(device))
 writer.close()
 #the_model.load_state_dict(torch.load(config.path.load_path+ 'l1_15000', map_location=torch.device('cpu')))
 the_model.load_state_dict(torch.load(config.path.result_path_model, map_location=torch.device('cpu')))
 the_model.eval()
+
 print("End model")
-sample = dataiter.next()
-images, labels = sample["input"], sample["label"]
+
+
 '''
 for i in range(4):
     #img_grid = torchvision.utils.make_grid(images)
@@ -104,12 +101,13 @@ A =labels[:,3:6,:,:]#sortie_to_plot[:,3:6,:,:].cpu().detach()
 
 #print(np.shape(n.squeeze(0)))
 '''
+
 list_light, list_view = get_wlvs_np(256, 10)
 viewlight = list_light[9]
 rendered = render(labels.float().to(device), viewlight[1], viewlight[0], roughness_factor=0.0)
-    #matplotlib_imshow(torchvision.utils.make_grid(rendered.cpu().detach()), one_channel=False)
-    #plt.show()
-save_image(images.float().to(device),labels.float().to(device),rendered.float().to(device),'label')
+save_image(images.float().to(device),labels.float().to(device),rendered.float().to(device),'../label',True)
+
+
 x_latent,x11,x9,x7,x5,x3,x1 = the_model.encode(images.float().to(device))
 sortie_to_plot = the_model.decode(x_latent.float().to(device),x11.float().to(device),x9.float().to(device),
                                   x7.float().to(device),x5.float().to(device),x3.float().to(device),
@@ -117,7 +115,11 @@ sortie_to_plot = the_model.decode(x_latent.float().to(device),x11.float().to(dev
 #imageio.imsave("img2.png", np.transpose(images.squeeze(0), (1, 2, 0)))
 #plt.savefig('im.png')
 rendered = render(sortie_to_plot, viewlight[1], viewlight[0], roughness_factor=0.0)
-save_image(images.float().to(device),sortie_to_plot,rendered.float().to(device),'rendering_40000_deep_loss_2000')
+save_image(images.float().to(device),sortie_to_plot,rendered.float().to(device),'../'+config.train.loss,True)
+
+writer.add_image('4_images_of_dataset_input', torchvision.utils.make_grid(images))
+writer.add_image('4_images_of_dataset_output', torchvision.utils.make_grid(labels[:,:3,:,:]))
+writer.add_image('4_images_of_model_output', torchvision.utils.make_grid(sortie_to_plot[:,:3,:,:]))
 
 '''
 for a in range(4):
@@ -226,7 +228,5 @@ matplotlib_imshow(img_grid_labels4.cpu().detach(), one_channel=False)
 plt.show()
 # write to tensorboard
 
-writer.add_image('4_images_of_dataset_input', img_grid)
-#writer.add_image('4_images_of_dataset_output', img_grid_labels_normals)
-writer.add_image('4_images_of_model_output', img_grid_sortie_to_plot_normals)
+
 '''
