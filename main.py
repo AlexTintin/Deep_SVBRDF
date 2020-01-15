@@ -9,6 +9,7 @@ from src.model_AE_Linear import *
 from src.model_AE import *
 from src.Model_Unet import *
 from src.VAE import *
+from src.DisentAEmixUnet import *
 from src.DisentAE import *
 from src.Modified_Unet import *
 import torch.optim as optim
