@@ -12,7 +12,7 @@ general:
 
 train:
   num_epochs: 10000       #number of epochs
-  learning_rate: 0.0000005      #learning rate for optimizer
+  learning_rate: 0.0000008      #learning rate for optimizer
   weight_decay: 0.000000001     #régularisation
   batch_size: 2            #size of batch
   num_workers: 2            #number of workers
