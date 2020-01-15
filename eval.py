@@ -7,6 +7,7 @@ from torchvision import transforms, utils
 from torch.utils.data import Dataset, DataLoader
 from src.Model_Unet import *
 from src.VAE import *
+from src.DisentAE import *
 import torch.optim as optim
 from torch.utils.tensorboard import SummaryWriter
 import random
@@ -64,7 +65,7 @@ images, labels = sample["input"], sample["label"]
 print("End Load data")
 print()
 print("Load model")
-the_model = VUnet()
+the_model = DAE()
 the_model.to(device)
 writer.add_graph(the_model, images.float().to(device))
 writer.close()
@@ -74,6 +75,31 @@ the_model.eval()
 
 print("End model")
 
+
+sortie_to_plot = the_model(images.float().to(device))
+
+# create grid of images
+img_grid = torchvision.utils.make_grid(images)#(np.log(images+0.01)-np.log(0.01))/(np.log(1.01)-np.log(0.01))
+#img_grid_labels_normals = torchvision.utils.make_grid(deprocess(labels[:,:3,:,:]))#torchvision.utils.make_grid(torch.cat([labels[:,:2,:,:],torch.ones((config.train.batch_size,1,256,256))],dim=1))
+img_grid_sortie_to_plot_normals =torchvision.utils.make_grid((sortie_to_plot[:,:3,:,:].cpu().detach()))
+
+#img_grid_labels2 = torchvision.utils.make_grid((labels[:,3:6,:,:]))
+img_grid_sortie_to_plot2 = torchvision.utils.make_grid((sortie_to_plot[:,3:6,:,:]))
+#img_grid_labels3 = torchvision.utils.make_grid((torch.cat([labels[:,6:7,:,:],labels[:,6:7,:,:],labels[:,6:7,:,:]],dim=1)))
+img_grid_sortie_to_plot3 = torchvision.utils.make_grid((torch.cat([sortie_to_plot[:,6:7,:,:],sortie_to_plot[:,6:7,:,:],sortie_to_plot[:,6:7,:,:]],dim=1)))
+#img_grid_labels4 = torchvision.utils.make_grid((labels[:,7:,:,:]))
+img_grid_sortie_to_plot4 = torchvision.utils.make_grid((sortie_to_plot[:,7:,:,:]))
+
+matplotlib_imshow(img_grid, one_channel=False)
+plt.show()
+matplotlib_imshow(img_grid_sortie_to_plot_normals.cpu().detach(), one_channel=False)
+plt.show()
+matplotlib_imshow(img_grid_sortie_to_plot2.cpu().detach(), one_channel=False)
+plt.show()
+matplotlib_imshow(img_grid_sortie_to_plot3.cpu().detach(), one_channel=False)
+plt.show()
+matplotlib_imshow(img_grid_sortie_to_plot4.cpu().detach(), one_channel=False)
+plt.show()
 
 '''
 for i in range(4):
@@ -100,12 +126,12 @@ A =labels[:,3:6,:,:]#sortie_to_plot[:,3:6,:,:].cpu().detach()
 
 
 #print(np.shape(n.squeeze(0)))
-'''
+
 
 list_light, list_view = get_wlvs_np(256, 10)
 viewlight = list_light[9]
 rendered = render(labels.float().to(device), viewlight[1], viewlight[0], roughness_factor=0.0)
-save_image(images.float().to(device),labels.float().to(device),rendered.float().to(device),'../label',True)
+#save_image(images.float().to(device),labels.float().to(device),rendered.float().to(device),'../label',True)
 
 
 x_latent,x11,x9,x7,x5,x3,x1 = the_model.encode(images.float().to(device))
@@ -120,7 +146,7 @@ save_image(images.float().to(device),sortie_to_plot,rendered.float().to(device),
 writer.add_image('4_images_of_dataset_input', torchvision.utils.make_grid(images))
 writer.add_image('4_images_of_dataset_output', torchvision.utils.make_grid(labels[:,:3,:,:]))
 writer.add_image('4_images_of_model_output', torchvision.utils.make_grid(sortie_to_plot[:,:3,:,:]))
-
+'''
 '''
 for a in range(4):
     M = 100000

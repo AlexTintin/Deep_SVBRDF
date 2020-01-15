@@ -75,7 +75,7 @@ def train_model(config, writer, model, dataloaders, criterion, optimizer, device
             loss = 0
             # rendering loss init light and viewing
             if rendering :
-                list_light, list_view = get_wlvs_np(256, 10)
+                list_light, list_view = get_wlvs_np(256, 9)
             # Iterate over data.
             for index_data, data in enumerate(dataloaders[phase]):
                 # get the inputs; data is a list of [inputs, labels]
