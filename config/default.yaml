@@ -4,7 +4,7 @@ path:
   data_path_val: ../valon1
   data_path_test: content/my_little_dataset/test
   result_path_model: ../../mytraining.pt
-  logs_tensorboard: content/runs/test
+  logs_tensorboard: /runs/test
   load_path: ../../mytraining.pt
 
 general:

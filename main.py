@@ -56,7 +56,7 @@ dataloadered_val = DataLoader(dataload_val, batch_size=config.train.batch_size,
 
 # Charger le model
 print("Load model")
-net = DAE()
+net = DUnet()
 net.to(device)
 
 # criterion : see config
