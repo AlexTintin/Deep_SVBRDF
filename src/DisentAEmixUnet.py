@@ -70,10 +70,10 @@ class DUnet(nn.Module):
         x7 = self.down3(x6)
         x8 = self.maxpool(x7)
         x9 = self.down4(x8)
-        x10 = self.maxpool(x9)
-        x11 = self.down5(x10)
-        x12 = self.maxpool(x11)
-        x_latent = self.down6(x12)
+        x_latent = self.maxpool(x9)
+        #x11 = self.down5(x10)
+        #x12 = self.maxpool(x11)
+        #x_latent = self.down6(x12)
         return x_latent
 
     def decodeD(self,x_latent):
@@ -135,8 +135,8 @@ class DUnet(nn.Module):
 
     def decodeN(self,x_latent):
         x = self.unmawpool(x_latent)
-        x = self.up1(x)
-        x = self.unmawpool(x)
+        #x = self.up1(x)
+        #x = self.unmawpool(x)
         x = self.up3(x)
         x = self.unmawpool(x)
         x = self.up4(x)
@@ -158,6 +158,7 @@ class DUnet(nn.Module):
 
     def forward(self, x):
         x_latent = self.encode(x)
+        print(x_latent.size())
         im = self.decodeN(x_latent)
         return im
     '''
