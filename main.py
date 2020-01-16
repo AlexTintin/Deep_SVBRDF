@@ -46,7 +46,7 @@ trans_all = transforms.Compose([
         transforms.ToTensor()
     ])
 
-os.chdir("../")
+#os.chdir("../")
 
 dataload_test = dataloader.Dataloader(config, phase = "test", transform=trans_all)
 dataloadered_test = DataLoader(dataload_test, batch_size=config.train.batch_size,

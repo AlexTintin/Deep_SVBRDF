@@ -43,15 +43,15 @@ class DUnet(nn.Module):
         self.down5 = doubleConv(512, 512)
         self.down6 = doubleConv(512, 512)
         self.up0 = doubleConv(512 * 8, 512 * 4)
-        self.up1 = doubleConv(512*4, 512*2)
-        self.up2 = doubleConv(512*2, 512)
+        self.up1 = doubleConv(512, 512)
+        self.up2 = doubleConv(512, 512)
         self.up3 = doubleConv(512, 256)
         self.up4 = doubleConv(256, 128)
         self.up5 = doubleConv(128, 64)
         self.up6 = doubleConv(64, 32)
         self.up7 = doubleConv(32, 16)
         self.up8 = doubleConv(64, 16)
-        self.outc = nn.Conv2d(16, 3, kernel_size=1)
+        self.outc = nn.Conv2d(16, 10, kernel_size=1)
         self.outcr = nn.Conv2d(16, 1, kernel_size=1)
         self.sig= nn.Sigmoid()
         self.maxpool = nn.MaxPool2d(2, 2)
@@ -137,17 +137,13 @@ class DUnet(nn.Module):
         x = self.unmawpool(x_latent)
         x = self.up1(x)
         x = self.unmawpool(x)
-        x = self.up2(x)
-        x = self.unmawpool(x)
         x = self.up3(x)
         x = self.unmawpool(x)
         x = self.up4(x)
         x = self.unmawpool(x)
         x = self.up5(x)
         x = self.unmawpool(x)
-        x = self.up6(x)
-        x = self.unmawpool(x)
-        x = self.up7(x)
+        x = self.up8(x)
         x = self.unmawpool(x)
         x = self.outc(x)
         return self.sig(x)
@@ -162,6 +158,11 @@ class DUnet(nn.Module):
 
     def forward(self, x):
         x_latent = self.encode(x)
+        im = self.decodeN(x_latent)
+        return im
+    '''
+    def forward(self, x):
+        x_latent = self.encode(x)
         x_normal, x_diffuse, x_roughness, x_specular = self.devide_latent(x_latent)
         imN = self.decodeN(x_normal.reshape(x_normal.size(0),512*4,1,1))
         x_normNdiff = torch.cat([x_normal.reshape(x_normal.size(0), 512 * 4, 1, 1),
@@ -174,3 +175,4 @@ class DUnet(nn.Module):
                                  x_roughness.reshape(x_normal.size(0), 512 * 4, 1, 1)], dim=1)
         imR = self.decodeR(x_normNrough)
         return torch.cat([imN,imD,imR,imS],dim=1)
+    '''

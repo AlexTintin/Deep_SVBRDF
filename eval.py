@@ -8,6 +8,7 @@ from torch.utils.data import Dataset, DataLoader
 from src.Model_Unet import *
 from src.VAE import *
 from src.DisentAE import *
+from src.DisentAEmixUnet import *
 import torch.optim as optim
 from torch.utils.tensorboard import SummaryWriter
 import random
@@ -65,7 +66,7 @@ images, labels = sample["input"], sample["label"]
 print("End Load data")
 print()
 print("Load model")
-the_model = DAE()
+the_model = DUnet()
 the_model.to(device)
 writer.add_graph(the_model, images.float().to(device))
 writer.close()
