@@ -80,8 +80,9 @@ class Dataloader(Dataset):
 
         if self.transform:
             input_t = self.transform(input)
-            normals_t = self.transform(label)
-            sample = {'input': input_t, 'label': normals_t}
+            label_t = self.transform(label)
+            normals_t = self.transform(normals)
+            sample = {'input': normals_t, 'label': normals_t}
         else:
-            sample = {'input': input, 'label': normals}
+            sample = {'input': normals, 'label': normals}
         return sample
