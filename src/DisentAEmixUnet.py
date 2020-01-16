@@ -19,10 +19,10 @@ class doubleConv(nn.Module):
         self.doubleconv = nn.Sequential(
             nn.Conv2d(input_size, output_size, kernel_size=3, padding=1),
             nn.BatchNorm2d(output_size),
-            nn.ReLU(True),
+            nn.LeakyReLU(0.2,True),
             nn.Conv2d(output_size, output_size, kernel_size=3, padding=1),
             nn.BatchNorm2d(output_size),
-            nn.ReLU(True),
+            nn.LeakyReLU(0.2,True),
         )
 
     def forward(self, x):
@@ -158,7 +158,7 @@ class DUnet(nn.Module):
 
     def forward(self, x):
         x_latent = self.encode(x)
-        print(x_latent.size())
+        #print(x_latent.size())
         im = self.decodeN(x_latent)
         return im
     '''
