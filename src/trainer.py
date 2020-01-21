@@ -67,7 +67,7 @@ def train_model(config, writer, model, dataloaders, criterion, optimizer, device
     for epoch in range(num_epochs):
         print('Epoch {}/{}'.format(epoch, num_epochs - 1))
         print('-' * 10)
-        '''
+
         if epoch % m == 0:
             print('lr is changing')
             learning_rate /= 2
@@ -75,7 +75,7 @@ def train_model(config, writer, model, dataloaders, criterion, optimizer, device
                                          weight_decay=0.0000000000001)
             if epoch==1500:
                 m=4000
-        '''
+
         # Each epoch has a training and validation phase
         for phase in ['train']:#, 'val']:
             if phase == 'train':
