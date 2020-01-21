@@ -37,12 +37,13 @@ def L1LogLoss(inputs, targets, weight = 1.0):
     return torch.mean(torch.abs(torch.log(inputs + 0.01) - torch.log(targets + 0.01))) * weight
 
 def L2Loss(inputs, targets,  weight = 1.0):
-    return torch.reduce_mean(torch.squared_difference(inputs, targets)) * weight
+    return torch.mean(torch.squared_difference(inputs, targets)) * weight
 
 # diffuse, specular, roughness, normal,
 def render(inputs, l, v,roughness_factor=0.0):
     INV_PI = 1.0 / math.pi
     EPS = 1e-12
+
 
     def GGX(NoH, roughness):
         alpha = roughness * roughness
@@ -63,9 +64,9 @@ def render(inputs, l, v,roughness_factor=0.0):
 
     #normal, diffuse, roughness, specular = torch.split(inputs, 4, axis=-1)
     normal = inputs[:, 0:3, :, :]
-    diffuse = inputs[:, 3:6, :, :]
-    roughness = torch.cat([inputs[:,6:7,:,:],inputs[:,6:7,:,:],inputs[:,6:7,:,:]],dim=1)
-    specular = inputs[:, 7:, :, :]
+    diffuse = (inputs[:, 3:6, :, :]+1)/2
+    roughness = (inputs[:, 6:9, :, :]+1)/2
+    specular = (inputs[:, 9:, :, :]+1)/2
 
    # img_grid_labels4 = torchvision.utils.make_grid(specular)
     #matplotlib_imshow(img_grid_labels4.cpu().detach(), one_channel=False)

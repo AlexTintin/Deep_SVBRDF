@@ -48,7 +48,7 @@ def train_model(config, writer, model, dataloaders, criterion, optimizer, device
     #chronomètre
     since = time.time()
     #copier le meilleur model
-    model.load_state_dict(torch.load(config.path.load_path, map_location=torch.device('cpu')))
+    #model.load_state_dict(torch.load(config.path.load_path, map_location=torch.device('cpu')))
     best_model_wts = copy.deepcopy(model.state_dict())
     #introduction du best_loss pour le val, pour retenir le meilleur model
     best_loss = 100000
@@ -56,14 +56,18 @@ def train_model(config, writer, model, dataloaders, criterion, optimizer, device
     num_epochs = config.train.num_epochs
     learning_rate = config.train.learning_rate/32
     m=500
+    '''
     if config.train.loss == 'rendering' or config.train.loss == 'deep_rendering':
         rendering = True
     else:
         rendering = False
+    '''
+    rendering = True
     #début de l'entrainement
     for epoch in range(num_epochs):
         print('Epoch {}/{}'.format(epoch, num_epochs - 1))
         print('-' * 10)
+        '''
         if epoch % m == 0:
             print('lr is changing')
             learning_rate /= 2
@@ -71,7 +75,7 @@ def train_model(config, writer, model, dataloaders, criterion, optimizer, device
                                          weight_decay=0.0000000000001)
             if epoch==1500:
                 m=4000
-
+        '''
         # Each epoch has a training and validation phase
         for phase in ['train']:#, 'val']:
             if phase == 'train':
@@ -83,6 +87,8 @@ def train_model(config, writer, model, dataloaders, criterion, optimizer, device
             running_corrects = 0
             nbre_sample = 0
             loss = 0
+            lossrend = 0
+            loss_smooth = 0
             # rendering loss init light and viewing
             if rendering :
                 list_light, list_view = get_wlvs_np(256, 9)
@@ -93,21 +99,27 @@ def train_model(config, writer, model, dataloaders, criterion, optimizer, device
                 # forward
                 # track history if only in train
                 with torch.set_grad_enabled(phase == 'train'):
+                    x_latent = model.encode(inputs)
+                    Dze = model.decode(x_latent+(torch.empty(x_latent.size()).normal_(mean=0,std=0.2)).to(device))
+                    Dz = model.decode(x_latent)
                     outputs = model(inputs)
+                    loss_smooth = 2*L1Loss(Dz,Dze)
                     if rendering:
                     # rendering loss iterate over 10 different light and view positions
-                        for j in range(10):
+                        for j in range(9):
                             viewlight = list_light[j]
                             A = render(outputs, viewlight[1], viewlight[0], roughness_factor=0.0)
                             B = render(labels, viewlight[1], viewlight[0],roughness_factor=0.0)
-                            if config.train.loss == 'rendering':
-                                loss+=L1LogLoss(A,B)
-                            else:
-                                loss += criterion.lossVGG16_l1(A.to(device), B.to(device))
-                    elif config.train.loss == 'l1':
-                        loss = criterion(outputs, labels)
-                    else:
-                        loss = criterion.lossVGG16_l1test(outputs, labels)
+                           # matplotlib_imshow(torchvision.utils.make_grid(A.detach()), one_channel=False)
+                           # plt.show()
+                            #if config.train.loss == 'rendering':
+                            lossrend += L1LogLoss(A.to(device),B.to(device))
+                            #else:
+                             #   loss += criterion.lossVGG16_l1(A.to(device), B.to(device))
+                    #elif config.train.loss == 'l1':
+                        loss = (1/9)*lossrend+ criterion(outputs, labels)+loss_smooth
+                    #else:
+                        #loss = criterion.lossVGG16_l1test(outputs, labels)
                     # backward + optimize only if in training phase
                     if phase == 'train':
                         loss.backward()

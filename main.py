@@ -65,13 +65,12 @@ net.to(device)
 
 # criterion : see config
 if config.train.loss == 'l1' or config.train.loss == 'rendering':
-    criterion =  nn.L1Loss()
+    criterion = nn.L1Loss()
 else:
     criterion = VGG16loss(device)
 
 #optimizer of Adam
-optimizer = torch.optim.Adam(net.parameters(), lr=config.train.learning_rate/64,
-            weight_decay=config.train.weight_decay)
+optimizer = torch.optim.Adam(net.parameters(), lr=config.train.learning_rate,betas=(0.5,0.999))
 
 print("End Load model")
 print()
