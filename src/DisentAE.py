@@ -155,11 +155,12 @@ class DAE(nn.Module):
             nn.LeakyReLU(0.2, True),  # 32*32*32
 
             nn.Upsample(scale_factor=2, mode='bilinear', align_corners=True),
-            nn.ConvTranspose2d(32, 8, kernel_size=3, padding=1),
-            nn.LeakyReLU(0.2, True),   # 8*128*128
+            nn.ConvTranspose2d(32, 16, kernel_size=3, padding=1),
+            nn.LeakyReLU(0.2, True),  # 16*64*64
 
             nn.Upsample(scale_factor=2, mode='bilinear', align_corners=True),
-            nn.ConvTranspose2d(8, 1, kernel_size=3, padding=1),
+            nn.ConvTranspose2d(16, 3, kernel_size=3, padding=1),
+            #nn.LeakyReLU(0.2, True),  # 8*128*128
 
             nn.Sigmoid()
         )
@@ -254,14 +255,13 @@ class DAE(nn.Module):
 
     def forward(self, x):
         x_latent = self.encode(x)
-        im_N = self.decode(x_latent)
-        #x_normal, x_diffuse, x_roughness, x_specular = self.devide_latent(x_latent)
-        #im_N = self.decodeN(x_normal.view(x_normal.size(0),1024,1,1))
-        #x_normNdiff = torch.cat([x_normal,x_diffuse],dim=1)
-        #im_D = self.decodeD(x_normNdiff.view(x_normal.size(0),1024*2,1,1))
-        #x_normNrough = torch.cat([x_normal, x_roughness], dim=1)
-        #im_R = self.decodeR(x_normNrough.view(x_normal.size(0),1024*2,1,1))
-        #x_normNspec = torch.cat([x_normal, x_specular], dim=1)
-        #im_S = self.decodeS(x_normNspec.view(x_normal.size(0),1024*2,1,1))
-        #output = torch.cat([im_N, im_D,im_R,im_S], dim=1)
-        return im_N
+        x_normal, x_diffuse, x_roughness, x_specular = self.devide_latent(x_latent)
+        im_N = self.decodeN(x_normal.view(x_normal.size(0),1024,1,1))
+        x_normNdiff = torch.cat([x_normal,x_diffuse],dim=1)
+        im_D = self.decodeD(x_normNdiff.view(x_normal.size(0),1024*2,1,1))
+        x_normNrough = torch.cat([x_normal, x_roughness], dim=1)
+        im_R = self.decodeR(x_normNrough.view(x_normal.size(0),1024*2,1,1))
+        x_normNspec = torch.cat([x_normal, x_specular], dim=1)
+        im_S = self.decodeS(x_normNspec.view(x_normal.size(0),1024*2,1,1))
+        output = torch.cat([im_N, im_D,im_R,im_S], dim=1)
+        return output
