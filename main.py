@@ -11,6 +11,8 @@ from src.Model_Unet import *
 from src.VAE import *
 from src.DisentAEmixUnet import *
 from src.DisentAE import *
+from src.Pretrain_encode import *
+from src.AE_Goa import *
 from src.Modified_Unet import *
 import torch.optim as optim
 from torch.utils.tensorboard import SummaryWriter
@@ -46,7 +48,7 @@ trans_all = transforms.Compose([
         transforms.ToTensor()
     ])
 
-os.chdir("../")
+#os.chdir("../")
 
 dataload_test = dataloader.Dataloader(config, phase = "test", transform=trans_all)
 dataloadered_test = DataLoader(dataload_test, batch_size=config.train.batch_size,
@@ -58,7 +60,7 @@ dataloadered_val = DataLoader(dataload_val, batch_size=config.train.batch_size,
 
 # Charger le model
 print("Load model")
-net = DUnet()
+net = AEG()
 net.to(device)
 
 # criterion : see config
@@ -68,7 +70,7 @@ else:
     criterion = VGG16loss(device)
 
 #optimizer of Adam
-optimizer = torch.optim.Adam(net.parameters(), lr=config.train.learning_rate,
+optimizer = torch.optim.Adam(net.parameters(), lr=config.train.learning_rate/64,
             weight_decay=config.train.weight_decay)
 
 print("End Load model")

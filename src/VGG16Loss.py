@@ -30,6 +30,7 @@ class VGG16loss():
         self.normalize = transforms.Compose([
             transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])])
 
+
     def lossVGG16_l1(self, target, label):
         target_rec = reconstruct_output(target)
         label_rec = reconstruct_output(label)
@@ -40,6 +41,17 @@ class VGG16loss():
             out_target[i] = self.model((self.normalize(target_rec[i].squeeze(0))).unsqueeze(0))
             out_label[i] = self.model((self.normalize(label_rec[i].squeeze(0))).unsqueeze(0))
             moy+= torch.abs(out_target[i]-out_label[i])
+        return torch.mean(moy)
+
+
+    def lossVGG16_l1test(self, target, label):
+        out_target = torch.zeros((2, 3, 256, 256))
+        out_label = torch.zeros((2, 3, 256, 256))
+        moy = torch.zeros((3, 256, 256))
+        for i in range(1):
+            out_target[i] = self.model((self.normalize(target[i].squeeze(0))).unsqueeze(0))
+            out_label[i] = self.model((self.normalize(label[i].squeeze(0))).unsqueeze(0))
+            moy += torch.abs(out_target[i]-out_label[i])
         return torch.mean(moy)
 
     def lossVGG16_rendering(self, target, label):

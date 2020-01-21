@@ -48,12 +48,14 @@ def train_model(config, writer, model, dataloaders, criterion, optimizer, device
     #chronomètre
     since = time.time()
     #copier le meilleur model
-    #model.load_state_dict(torch.load(config.path.load_path, map_location=torch.device('cpu')))
+    model.load_state_dict(torch.load(config.path.load_path, map_location=torch.device('cpu')))
     best_model_wts = copy.deepcopy(model.state_dict())
     #introduction du best_loss pour le val, pour retenir le meilleur model
     best_loss = 100000
     n_batches = config.train.batch_size
     num_epochs = config.train.num_epochs
+    learning_rate = config.train.learning_rate/32
+    m=500
     if config.train.loss == 'rendering' or config.train.loss == 'deep_rendering':
         rendering = True
     else:
@@ -62,6 +64,14 @@ def train_model(config, writer, model, dataloaders, criterion, optimizer, device
     for epoch in range(num_epochs):
         print('Epoch {}/{}'.format(epoch, num_epochs - 1))
         print('-' * 10)
+        if epoch % m == 0:
+            print('lr is changing')
+            learning_rate /= 2
+            optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate,
+                                         weight_decay=0.0000000000001)
+            if epoch==1500:
+                m=4000
+
         # Each epoch has a training and validation phase
         for phase in ['train']:#, 'val']:
             if phase == 'train':
@@ -97,7 +107,7 @@ def train_model(config, writer, model, dataloaders, criterion, optimizer, device
                     elif config.train.loss == 'l1':
                         loss = criterion(outputs, labels)
                     else:
-                        loss = criterion.lossVGG16_l1(outputs, labels)
+                        loss = criterion.lossVGG16_l1test(outputs, labels)
                     # backward + optimize only if in training phase
                     if phase == 'train':
                         loss.backward()

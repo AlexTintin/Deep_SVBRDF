@@ -25,8 +25,8 @@ def load_yaml(file):
 
 
 class Config:
-    #def __init__(self, path="config/", cfg=None):
-    def __init__(self, path="/content/Deep_SVBRDF/config/", cfg=None):
+    def __init__(self, path="config/", cfg=None):
+    #def __init__(self, path="/content/Deep_SVBRDF/config/", cfg=None):
         self.__is_none = False
         self.__data = cfg if cfg is not None else {}
         if path is not None and cfg is None:

@@ -8,6 +8,7 @@ from torch.utils.data import Dataset, DataLoader
 from src.Model_Unet import *
 from src.VAE import *
 from src.DisentAE import *
+from src.AE_Goa import *
 from src.DisentAEmixUnet import *
 import torch.optim as optim
 from torch.utils.tensorboard import SummaryWriter
@@ -19,6 +20,7 @@ from utils.tools import *
 from src.rendering_loss import *
 from sklearn.decomposition import PCA
 from utils.tools import *
+from src.Pretrain_encode import *
 import matplotlib.image as mpimg
 
 
@@ -66,7 +68,7 @@ images, labels = sample["input"], sample["label"]
 print("End Load data")
 print()
 print("Load model")
-the_model = DUnet()
+the_model = DAEpretrained(device)
 the_model.to(device)
 writer.add_graph(the_model, images.float().to(device))
 writer.close()
@@ -85,22 +87,52 @@ img_grid = torchvision.utils.make_grid(images)#(np.log(images+0.01)-np.log(0.01)
 img_grid_sortie_to_plot_normals =torchvision.utils.make_grid((sortie_to_plot[:,:3,:,:].cpu().detach()))
 
 #img_grid_labels2 = torchvision.utils.make_grid((labels[:,3:6,:,:]))
-img_grid_sortie_to_plot2 = torchvision.utils.make_grid((sortie_to_plot[:,3:6,:,:]))
+#img_grid_sortie_to_plot2 = torchvision.utils.make_grid((sortie_to_plot[:,3:6,:,:]))
 #img_grid_labels3 = torchvision.utils.make_grid((torch.cat([labels[:,6:7,:,:],labels[:,6:7,:,:],labels[:,6:7,:,:]],dim=1)))
-img_grid_sortie_to_plot3 = torchvision.utils.make_grid((torch.cat([sortie_to_plot[:,6:7,:,:],sortie_to_plot[:,6:7,:,:],sortie_to_plot[:,6:7,:,:]],dim=1)))
+#img_grid_sortie_to_plot3 = torchvision.utils.make_grid((torch.cat([sortie_to_plot[:,6:7,:,:],sortie_to_plot[:,6:7,:,:],sortie_to_plot[:,6:7,:,:]],dim=1)))
 #img_grid_labels4 = torchvision.utils.make_grid((labels[:,7:,:,:]))
-img_grid_sortie_to_plot4 = torchvision.utils.make_grid((sortie_to_plot[:,7:,:,:]))
+#img_grid_sortie_to_plot4 = torchvision.utils.make_grid((sortie_to_plot[:,7:,:,:]))
 
 matplotlib_imshow(img_grid, one_channel=False)
 plt.show()
 matplotlib_imshow(img_grid_sortie_to_plot_normals.cpu().detach(), one_channel=False)
 plt.show()
-matplotlib_imshow(img_grid_sortie_to_plot2.cpu().detach(), one_channel=False)
+
+
+
+
+the_model = DAE()
+the_model.to(device)
+
+
+the_model.load_state_dict(torch.load(config.path.load_path, map_location=torch.device('cpu')))
+the_model.eval()
+
+print("End model")
+
+
+sortie_to_plot = the_model(images.float().to(device))
+
+# create grid of images
+img_grid = torchvision.utils.make_grid(images)#(np.log(images+0.01)-np.log(0.01))/(np.log(1.01)-np.log(0.01))
+#img_grid_labels_normals = torchvision.utils.make_grid(deprocess(labels[:,:3,:,:]))#torchvision.utils.make_grid(torch.cat([labels[:,:2,:,:],torch.ones((config.train.batch_size,1,256,256))],dim=1))
+img_grid_sortie_to_plot_normals =torchvision.utils.make_grid((sortie_to_plot[:,:3,:,:].cpu().detach()))
+
+#img_grid_labels2 = torchvision.utils.make_grid((labels[:,3:6,:,:]))
+#img_grid_sortie_to_plot2 = torchvision.utils.make_grid((sortie_to_plot[:,3:6,:,:]))
+#img_grid_labels3 = torchvision.utils.make_grid((torch.cat([labels[:,6:7,:,:],labels[:,6:7,:,:],labels[:,6:7,:,:]],dim=1)))
+#img_grid_sortie_to_plot3 = torchvision.utils.make_grid((torch.cat([sortie_to_plot[:,6:7,:,:],sortie_to_plot[:,6:7,:,:],sortie_to_plot[:,6:7,:,:]],dim=1)))
+#img_grid_labels4 = torchvision.utils.make_grid((labels[:,7:,:,:]))
+#img_grid_sortie_to_plot4 = torchvision.utils.make_grid((sortie_to_plot[:,7:,:,:]))
+
+matplotlib_imshow(img_grid_sortie_to_plot_normals.cpu().detach(), one_channel=False)
 plt.show()
-matplotlib_imshow(img_grid_sortie_to_plot3.cpu().detach(), one_channel=False)
-plt.show()
-matplotlib_imshow(img_grid_sortie_to_plot4.cpu().detach(), one_channel=False)
-plt.show()
+#matplotlib_imshow(img_grid_sortie_to_plot2.cpu().detach(), one_channel=False)
+#plt.show()
+#matplotlib_imshow(img_grid_sortie_to_plot3.cpu().detach(), one_channel=False)
+#plt.show()
+#matplotlib_imshow(img_grid_sortie_to_plot4.cpu().detach(), one_channel=False)
+#plt.show()
 
 '''
 for i in range(4):

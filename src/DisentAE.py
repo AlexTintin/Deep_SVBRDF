@@ -51,12 +51,8 @@ class DAE(nn.Module):
             nn.Conv2d(256, 512, kernel_size=3, padding=1),
             nn.LeakyReLU(0.2, True),
             nn.MaxPool2d(2, 2), # 8*8*512
-            nn.Conv2d(512, 1024, kernel_size=3, padding=1),
-            nn.LeakyReLU(0.2, True),
-            nn.MaxPool2d(2, 2), # 4*4*1024
-            nn.Conv2d(1024, 1024, kernel_size=3, padding=1),
-            nn.LeakyReLU(0.2, True),
-            nn.MaxPool2d(2, 2),  # 2*2*1024
+            nn.BatchNorm2d(512),
+
 
         )
             #Flatten(),
@@ -168,6 +164,32 @@ class DAE(nn.Module):
             nn.Sigmoid()
         )
 
+        self.decoder = nn.Sequential(
+
+
+            nn.Upsample(scale_factor=2, mode='bilinear', align_corners=True),
+            nn.ConvTranspose2d(512, 256, kernel_size=3, padding=1),
+            nn.LeakyReLU(0.2, True),
+
+            nn.Upsample(scale_factor=2, mode='bilinear', align_corners=True),
+            nn.ConvTranspose2d(256, 128, kernel_size=3, padding=1),  # 128*8*8
+            nn.LeakyReLU(0.2, True),
+
+            nn.Upsample(scale_factor=2, mode='bilinear', align_corners=True),
+            nn.ConvTranspose2d(128, 64, kernel_size=3, padding=1),  # 64*16*16
+            nn.LeakyReLU(0.2, True),
+
+            nn.Upsample(scale_factor=2, mode='bilinear', align_corners=True),
+            nn.ConvTranspose2d(64, 32, kernel_size=3, padding=1),
+            nn.LeakyReLU(0.2, True),  # 32*32*32
+
+            nn.Upsample(scale_factor=2, mode='bilinear', align_corners=True),
+            nn.ConvTranspose2d(32, 3, kernel_size=3, padding=1),
+
+
+            nn.Sigmoid()
+        )
+
         self.decoderS = nn.Sequential(
             nn.Upsample(scale_factor=2, mode='bilinear', align_corners=True),
             nn.ConvTranspose2d(1024 * 2, 1024, kernel_size=3, padding=1),
@@ -219,6 +241,9 @@ class DAE(nn.Module):
     def decodeS(self, z):
         return self.decoderS(z)
 
+    def decode(self, z):
+        return self.decoder(z)
+
     def devide_latent(self,x_latent):
         x_normal = x_latent[:, :, 0, 0]
         x_diffuse = x_latent[:, :, 1, 0]
@@ -229,13 +254,14 @@ class DAE(nn.Module):
 
     def forward(self, x):
         x_latent = self.encode(x)
-        x_normal, x_diffuse, x_roughness, x_specular = self.devide_latent(x_latent)
-        im_N = self.decodeN(x_normal.view(x_normal.size(0),1024,1,1))
-        x_normNdiff = torch.cat([x_normal,x_diffuse],dim=1)
-        im_D = self.decodeD(x_normNdiff.view(x_normal.size(0),1024*2,1,1))
-        x_normNrough = torch.cat([x_normal, x_roughness], dim=1)
-        im_R = self.decodeR(x_normNrough.view(x_normal.size(0),1024*2,1,1))
-        x_normNspec = torch.cat([x_normal, x_specular], dim=1)
-        im_S = self.decodeS(x_normNspec.view(x_normal.size(0),1024*2,1,1))
-        output = torch.cat([im_N, im_D,im_R,im_S], dim=1)
-        return output
+        im_N = self.decode(x_latent)
+        #x_normal, x_diffuse, x_roughness, x_specular = self.devide_latent(x_latent)
+        #im_N = self.decodeN(x_normal.view(x_normal.size(0),1024,1,1))
+        #x_normNdiff = torch.cat([x_normal,x_diffuse],dim=1)
+        #im_D = self.decodeD(x_normNdiff.view(x_normal.size(0),1024*2,1,1))
+        #x_normNrough = torch.cat([x_normal, x_roughness], dim=1)
+        #im_R = self.decodeR(x_normNrough.view(x_normal.size(0),1024*2,1,1))
+        #x_normNspec = torch.cat([x_normal, x_specular], dim=1)
+        #im_S = self.decodeS(x_normNspec.view(x_normal.size(0),1024*2,1,1))
+        #output = torch.cat([im_N, im_D,im_R,im_S], dim=1)
+        return im_N
