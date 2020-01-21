@@ -51,6 +51,9 @@ class DAE(nn.Module):
             nn.Conv2d(256, 512, kernel_size=3, padding=1),
             nn.LeakyReLU(0.2, True),
             nn.MaxPool2d(2, 2), # 8*8*512
+            nn.Conv2d(512, 512, kernel_size=3, padding=1),
+            nn.LeakyReLU(0.2, True),
+            nn.MaxPool2d(2, 2),  # 4*4*512
             nn.BatchNorm2d(512),
 
 
@@ -91,7 +94,7 @@ class DAE(nn.Module):
             nn.Upsample(scale_factor=2, mode='bilinear', align_corners=True),
             nn.ConvTranspose2d(8, 3, kernel_size=3, padding=1),
 
-            nn.Sigmoid()
+            nn.tanh()
         )
 
         self.decoderD = nn.Sequential(
@@ -126,7 +129,7 @@ class DAE(nn.Module):
             nn.Upsample(scale_factor=2, mode='bilinear', align_corners=True),
             nn.ConvTranspose2d(16, 3, kernel_size=3, padding=1),
 
-            nn.Sigmoid()
+            nn.tanh()
         )
 
         self.decoderR = nn.Sequential(
@@ -162,7 +165,7 @@ class DAE(nn.Module):
             nn.ConvTranspose2d(16, 3, kernel_size=3, padding=1),
             #nn.LeakyReLU(0.2, True),  # 8*128*128
 
-            nn.Sigmoid()
+            nn.tanh()
         )
 
         self.decoder = nn.Sequential(
@@ -188,7 +191,7 @@ class DAE(nn.Module):
             nn.ConvTranspose2d(32, 3, kernel_size=3, padding=1),
 
 
-            nn.Sigmoid()
+            nn.tanh()
         )
 
         self.decoderS = nn.Sequential(
@@ -224,7 +227,7 @@ class DAE(nn.Module):
             nn.ConvTranspose2d(16, 3, kernel_size=3, padding=1),
             #nn.LeakyReLU(0.2, True),  # 8*128*128
 
-            nn.Sigmoid()
+            nn.tanh()
         )
 
     def encode(self, x):
