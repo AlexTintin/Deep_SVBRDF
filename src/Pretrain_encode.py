@@ -157,7 +157,7 @@ class DAEpretrained(nn.Module):
         #print(x.size())
         x_latent = self.encode(x)
         #print(x_latent.size())
-        im_N = self.decode(x_latent)
+        im = self.decode(x_latent)
         # x_normal, x_diffuse, x_roughness, x_specular = self.devide_latent(x_latent)
         # im_N = self.decodeN(x_normal.view(x_normal.size(0),1024,1,1))
         # x_normNdiff = torch.cat([x_normal,x_diffuse],dim=1)
@@ -167,4 +167,4 @@ class DAEpretrained(nn.Module):
         # x_normNspec = torch.cat([x_normal, x_specular], dim=1)
         # im_S = self.decodeS(x_normNspec.view(x_normal.size(0),1024*2,1,1))
         # output = torch.cat([im_N, im_D,im_R,im_S], dim=1)
-        return im_N
+        return im

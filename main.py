@@ -60,7 +60,7 @@ dataloadered_val = DataLoader(dataload_val, batch_size=config.train.batch_size,
 
 # Charger le model
 print("Load model")
-net = AEG()
+net = DAEpretrained(device)
 net.to(device)
 
 # criterion : see config
@@ -70,7 +70,8 @@ else:
     criterion = VGG16loss(device)
 
 #optimizer of Adam
-optimizer = torch.optim.Adam(net.parameters(), lr=config.train.learning_rate,betas=(0.5,0.999))
+optimizer = torch.optim.Adam(net.parameters(), lr=config.train.learning_rate,
+                             weight_decay=config.train.weight_decay)
 
 print("End Load model")
 print()

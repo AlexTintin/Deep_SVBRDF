@@ -68,7 +68,7 @@ images, labels = sample["input"], sample["label"]
 print("End Load data")
 print()
 print("Load model")
-the_model = AEG()
+the_model = DAEpretrained(device)
 the_model.to(device)
 writer.add_graph(the_model, images.float().to(device))
 writer.close()
@@ -82,21 +82,23 @@ print("End model")
 sortie_to_plot = the_model(images.float().to(device))
 
 # create grid of images
-#img_grid = torchvision.utils.make_grid(images)#(np.log(images+0.01)-np.log(0.01))/(np.log(1.01)-np.log(0.01))
-img_grid_labels_normals = torchvision.utils.make_grid(deprocess(labels[:,:3,:,:]))#torchvision.utils.make_grid(torch.cat([labels[:,:2,:,:],torch.ones((config.train.batch_size,1,256,256))],dim=1))
-img_grid_sortie_to_plot_normals =torchvision.utils.make_grid(deprocess(sortie_to_plot[:,:3,:,:].cpu().detach()))
+img_grid = torchvision.utils.make_grid(images)#(np.log(images+0.01)-np.log(0.01))/(np.log(1.01)-np.log(0.01))
+img_grid_sortie_to_plot_normals =torchvision.utils.make_grid(deprocess(sortie_to_plot.cpu().detach()))
+#img_grid_labels_normals = torchvision.utils.make_grid(deprocess(labels[:,:3,:,:]))#torchvision.utils.make_grid(torch.cat([labels[:,:2,:,:],torch.ones((config.train.batch_size,1,256,256))],dim=1))
+#img_grid_sortie_to_plot_normals =torchvision.utils.make_grid(deprocess(sortie_to_plot[:,:3,:,:].cpu().detach()))
 
-img_grid_labels2 = torchvision.utils.make_grid(deprocess(labels[:,3:6,:,:]))
-img_grid_sortie_to_plot2 = torchvision.utils.make_grid(deprocess(sortie_to_plot[:,3:6,:,:]))
-img_grid_labels3 = torchvision.utils.make_grid(deprocess(labels[:,6:9,:,:]))
-img_grid_sortie_to_plot3 = torchvision.utils.make_grid(deprocess(sortie_to_plot[:,6:9,:,:]))
-img_grid_labels4 = torchvision.utils.make_grid(deprocess(labels[:,9:,:,:]))
-img_grid_sortie_to_plot4 = torchvision.utils.make_grid(deprocess(sortie_to_plot[:,9:,:,:]))
+#img_grid_labels2 = torchvision.utils.make_grid(deprocess(labels[:,3:6,:,:]))
+#img_grid_sortie_to_plot2 = torchvision.utils.make_grid(deprocess(sortie_to_plot[:,3:6,:,:]))
+#img_grid_labels3 = torchvision.utils.make_grid(deprocess(labels[:,6:9,:,:]))
+#img_grid_sortie_to_plot3 = torchvision.utils.make_grid(deprocess(sortie_to_plot[:,6:9,:,:]))
+#img_grid_labels4 = torchvision.utils.make_grid(deprocess(labels[:,9:,:,:]))
+#img_grid_sortie_to_plot4 = torchvision.utils.make_grid(deprocess(sortie_to_plot[:,9:,:,:]))
 
-matplotlib_imshow(img_grid_labels_normals, one_channel=False)
+matplotlib_imshow(img_grid, one_channel=False)
 plt.show()
 matplotlib_imshow(img_grid_sortie_to_plot_normals.cpu().detach(), one_channel=False)
 plt.show()
+'''
 matplotlib_imshow(img_grid_labels2, one_channel=False)
 plt.show()
 matplotlib_imshow(img_grid_sortie_to_plot2.cpu().detach(), one_channel=False)
@@ -109,7 +111,7 @@ matplotlib_imshow(img_grid_labels4, one_channel=False)
 plt.show()
 matplotlib_imshow(img_grid_sortie_to_plot4.cpu().detach(), one_channel=False)
 plt.show()
-
+'''
 
 '''
 for i in range(4):

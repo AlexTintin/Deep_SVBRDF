@@ -56,13 +56,13 @@ def train_model(config, writer, model, dataloaders, criterion, optimizer, device
     num_epochs = config.train.num_epochs
     learning_rate = config.train.learning_rate/32
     m=500
-    '''
+    #eps = (torch.empty((2, 512, 8, 8)).normal_(mean=0, std=0.2)).to(device)
+
     if config.train.loss == 'rendering' or config.train.loss == 'deep_rendering':
         rendering = True
     else:
         rendering = False
-    '''
-    rendering = True
+
     #début de l'entrainement
     for epoch in range(num_epochs):
         print('Epoch {}/{}'.format(epoch, num_epochs - 1))
@@ -89,6 +89,7 @@ def train_model(config, writer, model, dataloaders, criterion, optimizer, device
             loss = 0
             lossrend = 0
             loss_smooth = 0
+
             # rendering loss init light and viewing
             if rendering :
                 list_light, list_view = get_wlvs_np(256, 9)
@@ -99,11 +100,11 @@ def train_model(config, writer, model, dataloaders, criterion, optimizer, device
                 # forward
                 # track history if only in train
                 with torch.set_grad_enabled(phase == 'train'):
-                    x_latent = model.encode(inputs)
-                    Dze = model.decode(x_latent+(torch.empty(x_latent.size()).normal_(mean=0,std=0.2)).to(device))
-                    Dz = model.decode(x_latent)
+                    #x_latent = model.encode(inputs)
+                    #Dze = model.decode(x_latent+eps)
+                    #Dz = model.decode(x_latent)
                     outputs = model(inputs)
-                    loss_smooth = 2*L1Loss(Dz,Dze)
+                    #loss_smooth = 2*L1Loss(Dz,Dze)
                     if rendering:
                     # rendering loss iterate over 10 different light and view positions
                         for j in range(9):
@@ -112,14 +113,14 @@ def train_model(config, writer, model, dataloaders, criterion, optimizer, device
                             B = render(labels, viewlight[1], viewlight[0],roughness_factor=0.0)
                            # matplotlib_imshow(torchvision.utils.make_grid(A.detach()), one_channel=False)
                            # plt.show()
-                            #if config.train.loss == 'rendering':
-                            lossrend += L1LogLoss(A.to(device),B.to(device))
-                            #else:
-                             #   loss += criterion.lossVGG16_l1(A.to(device), B.to(device))
-                    #elif config.train.loss == 'l1':
-                        loss = (1/9)*lossrend+ criterion(outputs, labels)+loss_smooth
-                    #else:
-                        #loss = criterion.lossVGG16_l1test(outputs, labels)
+                            if config.train.loss == 'rendering':
+                                lossrend += L1LogLoss(A.to(device),B.to(device))
+                            else:
+                                loss += criterion.lossVGG16_l1(A.to(device), B.to(device))
+                    elif config.train.loss == 'l1':
+                        loss = criterion(outputs, labels)
+                    else:
+                        loss = criterion.lossVGG16_l1test(outputs, labels)
                     # backward + optimize only if in training phase
                     if phase == 'train':
                         loss.backward()
