@@ -14,8 +14,8 @@ train:
   num_epochs: 15000       #number of epochs
   learning_rate: 0.0001      #learning rate for optimizer
   weight_decay: 0.000000001     #régularisation
-  batch_size: 1            #size of batch
+  batch_size: 2            #size of batch
   num_workers: 2            #number of workers
   trainset_division: 1000    #trainset too big so we divide it in 100
   real_training: False
-  loss: 'l1'   #or 'rendering' or 'deep' or 'deep_rendering'
+  loss: 'rendering'   #or 'rendering' or 'deep' or 'deep_rendering'
