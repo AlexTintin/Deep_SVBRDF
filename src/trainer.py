@@ -54,7 +54,7 @@ def train_model(config, writer, model, dataloaders, criterion, optimizer, device
     best_loss = 100000
     n_batches = config.train.batch_size
     num_epochs = config.train.num_epochs
-    learning_rate = config.train.learning_rate/32
+    learning_rate = config.train.learning_rate
     m=500
     #eps = (torch.empty((2, 512, 8, 8)).normal_(mean=0, std=0.2)).to(device)
 
@@ -87,8 +87,6 @@ def train_model(config, writer, model, dataloaders, criterion, optimizer, device
             running_corrects = 0
             nbre_sample = 0
             loss = 0
-            lossrend = 0
-            loss_smooth = 0
 
             # rendering loss init light and viewing
             if rendering :
@@ -111,10 +109,10 @@ def train_model(config, writer, model, dataloaders, criterion, optimizer, device
                             viewlight = list_light[j]
                             A = render(outputs, viewlight[1], viewlight[0], roughness_factor=0.0)
                             B = render(labels, viewlight[1], viewlight[0],roughness_factor=0.0)
-                           # matplotlib_imshow(torchvision.utils.make_grid(A.detach()), one_channel=False)
+                           # matplotlib_imshow(torchvision.utils.make_grid(B.detach()), one_channel=False)
                            # plt.show()
                             if config.train.loss == 'rendering':
-                                lossrend += L1LogLoss(A.to(device),B.to(device))
+                                loss += L1LogLoss(A,B)
                             else:
                                 loss += criterion.lossVGG16_l1(A.to(device), B.to(device))
                     elif config.train.loss == 'l1':

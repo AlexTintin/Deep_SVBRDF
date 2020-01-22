@@ -94,7 +94,10 @@ img_grid_sortie_to_plot3 = torchvision.utils.make_grid(deprocess(sortie_to_plot[
 img_grid_labels4 = torchvision.utils.make_grid(deprocess(labels[:,9:,:,:]))
 img_grid_sortie_to_plot4 = torchvision.utils.make_grid(deprocess(sortie_to_plot[:,9:,:,:]))
 
-
+matplotlib_imshow(img_grid_labels_normals, one_channel=False)
+plt.show()
+matplotlib_imshow(img_grid_sortie_to_plot_normals.cpu().detach(), one_channel=False)
+plt.show()
 matplotlib_imshow(img_grid_labels2, one_channel=False)
 plt.show()
 matplotlib_imshow(img_grid_sortie_to_plot2.cpu().detach(), one_channel=False)

@@ -52,9 +52,9 @@ class DAE(nn.Module):
             nn.LeakyReLU(0.2, True),
             nn.MaxPool2d(2, 2), # 8*8*512
             nn.Conv2d(512, 512, kernel_size=3, padding=1),
-            nn.LeakyReLU(0.2, True),
-            nn.MaxPool2d(2, 2),  # 4*4*512
-            nn.BatchNorm2d(512),
+           # nn.LeakyReLU(0.2, True),
+           # nn.MaxPool2d(2, 2),  # 4*4*512
+           # nn.BatchNorm2d(512),
 
 
         )
@@ -170,6 +170,7 @@ class DAE(nn.Module):
 
         self.decoder = nn.Sequential(
 
+            nn.LeakyReLU(0.2, True),
 
             nn.Upsample(scale_factor=2, mode='bilinear', align_corners=True),
             nn.ConvTranspose2d(512, 256, kernel_size=3, padding=1),
@@ -188,7 +189,7 @@ class DAE(nn.Module):
             nn.LeakyReLU(0.2, True),  # 32*32*32
 
             nn.Upsample(scale_factor=2, mode='bilinear', align_corners=True),
-            nn.ConvTranspose2d(32, 3, kernel_size=3, padding=1),
+            nn.ConvTranspose2d(32, 12, kernel_size=3, padding=1),
 
 
             nn.Tanh()
@@ -258,6 +259,8 @@ class DAE(nn.Module):
 
     def forward(self, x):
         x_latent = self.encode(x)
+        im = self.decode(x_latent)
+        '''
         x_normal, x_diffuse, x_roughness, x_specular = self.devide_latent(x_latent)
         imN = self.decodeN(x_normal.reshape(x_normal.size(0), 512 * 4, 1, 1))
         x_normNdiff = torch.cat([x_normal.reshape(x_normal.size(0), 512 * 4, 1, 1),
@@ -270,3 +273,5 @@ class DAE(nn.Module):
                                   x_roughness.reshape(x_normal.size(0), 512 * 4, 1, 1)], dim=1)
         imR = self.decodeR(x_normNrough)
         return torch.cat([imN, imD, imR, imS], dim=1)
+        '''
+        return im
