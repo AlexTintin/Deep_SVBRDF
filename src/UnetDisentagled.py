@@ -50,7 +50,7 @@ class DUnet(nn.Module):
         self.up4 = doubleConv(512+256, 256)
         self.up5 = doubleConv(256+128, 128)
         self.up6 = doubleConv(128+64, 64)
-        self.outc = nn.Conv2d(64, 3, kernel_size=1)
+        self.outc = nn.Conv2d(64, 9, kernel_size=1)
         self.sig= nn.Sigmoid()
         self.maxpool = nn.MaxPool2d(2, 2)
         self.unmawpool = nn.Upsample(scale_factor=2, mode='bilinear', align_corners=True)

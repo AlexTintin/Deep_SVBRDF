@@ -63,10 +63,10 @@ def render(inputs, l, v,roughness_factor=0.0):
 
 
     #normal, diffuse, roughness, specular = torch.split(inputs, 4, axis=-1)
-    normal = inputs[:, 0:3, :, :]
-    diffuse = (inputs[:, 3:6, :, :]+1)/2
-    roughness = (inputs[:, 6:9, :, :]+1)/2
-    specular = (inputs[:, 9:, :, :]+1)/2
+    normal = inputs[:, 0:3, :, :]*2-1
+    diffuse = (inputs[:, 3:6, :, :])
+    roughness = (inputs[:, 6:9, :, :])
+    specular = (inputs[:, 9:, :, :])
 
    # img_grid_labels4 = torchvision.utils.make_grid(specular)
     #matplotlib_imshow(img_grid_labels4.cpu().detach(), one_channel=False)

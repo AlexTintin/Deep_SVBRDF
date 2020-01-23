@@ -76,15 +76,15 @@ class Dataloader(Dataset):
         diffuse = (image[delta:-delta,2*288+delta:3 * 288-delta,:]/255)
         roughness = (image[delta:-delta,3*288+delta:4 * 288-delta,:]/255)
         specular = (image[delta:-delta,4*288+delta:5 * 288-delta,:]/255)
-        label = np.concatenate((normals,diffuse,roughness,specular),axis = 2)
-        label *=2
-        label -=1
+        label = np.concatenate((diffuse,roughness,specular),axis = 2)
+        #label *=2
+        #label -=1
         if self.transform:
             input_t = self.transform(input)
             label_t = self.transform(label)
             normals_t = self.transform(normals)
             roughness_t = self.transform(roughness)
-            sample = {'inputx': input_t, 'inputy': normals_t,'label': roughness_t}
+            sample = {'inputx': input_t, 'inputy': normals_t,'label': label_t}
         else:
-            sample = {'inputx': input, 'inputy': normals,'label': roughness}
+            sample = {'inputx': input, 'inputy': normals,'label': label}
         return sample
