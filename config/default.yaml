@@ -18,4 +18,4 @@ train:
   num_workers: 2            #number of workers
   trainset_division: 1000    #trainset too big so we divide it in 100
   real_training: False
-  loss: 'l1'   #or 'rendering' or 'deep' or 'deep_rendering'
+  loss: 'rendering'   #or 'rendering' or 'deep' or 'deep_rendering'

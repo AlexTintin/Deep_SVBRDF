@@ -107,8 +107,8 @@ def train_model(config, writer, model, dataloaders, criterion, optimizer, device
                     # rendering loss iterate over 10 different light and view positions
                         for j in range(9):
                             viewlight = list_light[j]
-                            A = render(outputs, viewlight[1], viewlight[0], roughness_factor=0.0)
-                            B = render(labels, viewlight[1], viewlight[0],roughness_factor=0.0)
+                            A = render(torch.cat([inputsy,outputs],dim=1), viewlight[1], viewlight[0], roughness_factor=0.0)
+                            B = render(torch.cat([inputsy,labels],dim=1), viewlight[1], viewlight[0],roughness_factor=0.0)
                            # matplotlib_imshow(torchvision.utils.make_grid(B.detach()), one_channel=False)
                            # plt.show()
                             if config.train.loss == 'rendering':
