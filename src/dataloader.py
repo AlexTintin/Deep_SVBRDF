@@ -73,7 +73,7 @@ class Dataloader(Dataset):
         delta = int(32/2)
         input = (np.log(image[delta:-delta,delta:288-delta,:]/255+0.01)-np.log(0.01))/(np.log(1.01)-np.log(0.01))
         normals = (image[delta:-delta,288+delta:2*288-delta,:]/255)
-        diffuse = (image[delta:-delta,2*288+delta:3 * 288-delta,:]/255)**2.2
+        diffuse = (image[delta:-delta,2*288+delta:3 * 288-delta,:]/255)
         roughness = (image[delta:-delta,3*288+delta:4 * 288-delta,:]/255)
         specular = (image[delta:-delta,4*288+delta:5 * 288-delta,:]/255)
         label = np.concatenate((normals,diffuse,roughness,specular),axis = 2)
@@ -83,7 +83,8 @@ class Dataloader(Dataset):
             input_t = self.transform(input)
             label_t = self.transform(label)
             normals_t = self.transform(normals)
-            sample = {'input': input_t, 'label': label_t}
+            roughness_t = self.transform(roughness)
+            sample = {'inputx': input_t, 'inputy': normals_t,'label': roughness_t}
         else:
-            sample = {'input': input, 'label': label}
+            sample = {'inputx': input, 'inputy': normals,'label': roughness}
         return sample

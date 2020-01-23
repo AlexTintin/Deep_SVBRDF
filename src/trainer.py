@@ -55,7 +55,7 @@ def train_model(config, writer, model, dataloaders, criterion, optimizer, device
     n_batches = config.train.batch_size
     num_epochs = config.train.num_epochs
     learning_rate = config.train.learning_rate
-    m=500
+    m=400
     #eps = (torch.empty((2, 512, 8, 8)).normal_(mean=0, std=0.2)).to(device)
 
     if config.train.loss == 'rendering' or config.train.loss == 'deep_rendering':
@@ -68,13 +68,13 @@ def train_model(config, writer, model, dataloaders, criterion, optimizer, device
         print('Epoch {}/{}'.format(epoch, num_epochs - 1))
         print('-' * 10)
 
-        if epoch % m == 0:
+        if epoch == m:
             print('lr is changing')
             learning_rate /= 2
             optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate,
                                          weight_decay=0.0000000000001)
-            if epoch==1500:
-                m=4000
+            if epoch==400:
+                m=800
 
         # Each epoch has a training and validation phase
         for phase in ['train']:#, 'val']:
@@ -94,14 +94,14 @@ def train_model(config, writer, model, dataloaders, criterion, optimizer, device
             # Iterate over data.
             for index_data, data in enumerate(dataloaders[phase]):
                 # get the inputs; data is a list of [inputs, labels]
-                inputs, labels = data["input"].float().to(device), data["label"].float().to(device)
+                inputsx,inputsy, labels = data["inputx"].float().to(device),data["inputy"].float().to(device), data["label"].float().to(device)
                 # forward
                 # track history if only in train
                 with torch.set_grad_enabled(phase == 'train'):
                     #x_latent = model.encode(inputs)
                     #Dze = model.decode(x_latent+eps)
                     #Dz = model.decode(x_latent)
-                    outputs = model(inputs)
+                    outputs = model(inputsx,inputsy)
                     #loss_smooth = 2*L1Loss(Dz,Dze)
                     if rendering:
                     # rendering loss iterate over 10 different light and view positions

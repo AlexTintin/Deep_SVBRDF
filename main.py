@@ -9,7 +9,7 @@ from src.model_AE_Linear import *
 from src.model_AE import *
 from src.Model_Unet import *
 from src.VAE import *
-from src.DisentAEmixUnet import *
+from src.UnetDisentagled import *
 from src.DisentAE import *
 from src.Pretrain_encode import *
 from src.AE_Goa import *
@@ -60,7 +60,7 @@ dataloadered_val = DataLoader(dataload_val, batch_size=config.train.batch_size,
 
 # Charger le model
 print("Load model")
-net = DAE()
+net = DUnet()
 net.to(device)
 
 # criterion : see config
