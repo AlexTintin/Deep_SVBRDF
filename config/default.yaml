@@ -11,7 +11,7 @@ general:
   seed: 0
 
 train:
-  num_epochs: 2000       #number of epochs
+  num_epochs: 15000       #number of epochs
   learning_rate: 0.00002      #learning rate for optimizer
   weight_decay: 0.000000001     #régularisation
   batch_size: 2            #size of batch
