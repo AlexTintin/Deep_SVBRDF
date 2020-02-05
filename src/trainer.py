@@ -55,6 +55,7 @@ def train_model(config, writer, model, dataloaders, criterion, optimizer, device
     n_batches = config.batch_size
     num_epochs = config.num_epochs
     learning_rate = config.learning_rate
+    lr_kl = 0.00001
     m=400
     #eps = (torch.empty((2, 512, 8, 8)).normal_(mean=0, std=0.2)).to(device)
 
@@ -98,11 +99,9 @@ def train_model(config, writer, model, dataloaders, criterion, optimizer, device
                 # forward
                 # track history if only in train
                 with torch.set_grad_enabled(phase == 'train'):
-                    #x_latent = model.encodeUnet(inputsy)[0]
-                    #z = model.latent_sample(model.encodeVAE(torch.cat([inputsx, inputsy], dim=1)))
-                    #klloss = model.latent_kl(z,x_latent)
-                    #Dze = model.decode(x_latent+eps)
-                    #Dz = model.decode(x_latent)
+                    x_latent = model.encodeUnet(inputsy)[0]
+                    z = model.latent_sample(model.encodeVAE(torch.cat([inputsx, inputsy], dim=1)))
+                    klloss = model.latent_kl(z,x_latent)
                     outputs = model(inputsx,inputsy)
                     #loss_smooth = 2*L1Loss(Dz,Dze)
                     if rendering:
@@ -120,8 +119,8 @@ def train_model(config, writer, model, dataloaders, criterion, optimizer, device
                     elif config.loss == 'l1':
                         loss = criterion(outputs, labels)
                     else:
-                        loss = criterion.ResLoss(outputs, labels)
-                    #loss += 0.0001*klloss
+                        loss = criterion.VGG19Loss(outputs, labels)
+                    loss += lr_kl*klloss
                     # backward + optimize only if in training phase
                     if phase == 'train':
                         if epoch==0:

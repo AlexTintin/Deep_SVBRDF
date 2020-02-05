@@ -59,9 +59,9 @@ def log_np_norm(image):
 
 
 def reconstruct_output(inputs):
-        diffuse = inputs[:, 0:3, :, :]
-        roughness = inputs[:, 3:6, :, :]
-        specular = inputs[:, 6:, :, :]
+        diffuse = inputs[ 0:3, :, :]
+        roughness = inputs[ 3:6, :, :]
+        specular = inputs[ 6:, :, :]
 
         return diffuse, roughness, specular
 

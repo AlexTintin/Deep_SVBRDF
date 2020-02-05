@@ -35,11 +35,11 @@ parser.add_argument("--seed", type=int, default=0 )
 parser.add_argument("--num_epochs", type=int, default=10)
 parser.add_argument("--learning_rate", type=float, default=0.00005)
 parser.add_argument("--weight_decay", type=float, default=0.000000001 )
-parser.add_argument("--batch_size", type=int, default=1)
+parser.add_argument("--batch_size", type=int, default=2)
 parser.add_argument("--num_workers", type=int, default=2)
 parser.add_argument("--trainset_division", type=int, default=10000, help="scale images to this size before cropping to 256x256")
 parser.add_argument("--real_training", type=bool, default=False)
-parser.add_argument("--loss", type=str, default="rendering")
+parser.add_argument("--loss", type=str, default="deep")
 
 config = parser.parse_args()
 
@@ -91,10 +91,10 @@ net.to(device)
 if config.loss == 'l1' or config.loss == 'rendering':
     criterion = nn.L1Loss()
 else:
-    criterion = Resfeat(device)
+    criterion = VGG19feat(device)
 
 #optimizer of Adam
-optimizer = torch.optim.Adam(net.parameters(), lr=config.learning_rate,
+optimizer = torch.optim.AdamW(net.parameters(), lr=config.learning_rate,
                              weight_decay=config.weight_decay)
 
 print("End Load model")

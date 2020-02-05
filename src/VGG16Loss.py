@@ -27,7 +27,6 @@ class VGG16feat():
         for param in self.model.parameters():
             param.requires_grad = False
         self.normalize = transforms.Compose([
-            transforms.ToTensor(),
             transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
         ])
 
@@ -35,11 +34,12 @@ class VGG16feat():
         return self.model((self.normalize(input).unsqueeze(0)).to(self.device).float())
 
     def VGG16Loss(self, target, label):
-        target_rec = reconstruct_output(target)
-        label_rec = reconstruct_output(label)
-        t = 0
-        for j in range(3):
-            t += torch.mean(torch.abs(self.extractfeat(label_rec[j]) - self.extractfeat(target_rec[j])))
+        for b in range(target.size()[0]):
+            target_rec = reconstruct_output(target[b])
+            label_rec = reconstruct_output(label[b])
+            t = 0
+            for j in range(3):
+                t += torch.mean(torch.abs(self.extractfeat(label_rec[j]) - self.extractfeat(target_rec[j])))
         return t
 
 
@@ -58,13 +58,12 @@ class VGG19feat():
     def __init__(self, device):
         vgg19 = torch.hub.load('pytorch/vision:v0.4.2', 'vgg19', pretrained=True)
         self.device = device
-        self.model = VGG19Bottom(vgg19, 1)
+        self.model = VGG19Bottom(vgg19, 5)
         self.model.to(self.device)
         self.model.eval()
         for param in self.model.parameters():
             param.requires_grad = False
         self.normalize = transforms.Compose([
-            transforms.ToTensor(),
             transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
         ])
 
@@ -72,11 +71,12 @@ class VGG19feat():
         return self.model((self.normalize(input).unsqueeze(0)).to(self.device).float())
 
     def VGG19Loss(self, target, label):
-        target_rec = reconstruct_output(target)
-        label_rec = reconstruct_output(label)
-        t = 0
-        for j in range(3):
-            t+=torch.mean(torch.abs(self.extractfeat(label_rec[j])-self.extractfeat(target_rec[j])))
+        for b in range(target.size()[0]):
+            target_rec = reconstruct_output(target[b])
+            label_rec = reconstruct_output(label[b])
+            t = 0
+            for j in range(3):
+                t += torch.mean(torch.abs(self.extractfeat(label_rec[j]) - self.extractfeat(target_rec[j])))
         return t
 
 
@@ -101,7 +101,6 @@ class Alexfeat():
         for param in self.model.parameters():
             param.requires_grad = False
         self.normalize = transforms.Compose([
-            transforms.ToTensor(),
             transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
         ])
 
@@ -109,11 +108,12 @@ class Alexfeat():
         return self.model(((self.normalize(input).unsqueeze(0)).to(self.device)).float())
 
     def AlexLoss(self, target, label):
-        target_rec = reconstruct_output(target)
-        label_rec = reconstruct_output(label)
-        t = 0
-        for j in range(3):
-            t+=torch.mean(torch.abs(self.extractfeat(label_rec[j])-self.extractfeat(target_rec[j])))
+        for b in range(target.size()[0]):
+            target_rec = reconstruct_output(target[b])
+            label_rec = reconstruct_output(label[b])
+            t = 0
+            for j in range(3):
+                t += torch.mean(torch.abs(self.extractfeat(label_rec[j]) - self.extractfeat(target_rec[j])))
         return t
 
 
@@ -131,14 +131,15 @@ class Resfeat():
         ])
 
     def extractfeat(self, input):
-        return self.model(self.normalize(input.squeeze(0)).unsqueeze(0))
+        return self.model(((self.normalize(input).unsqueeze(0)).to(self.device)).float())
 
     def ResLoss(self, target, label):
-        target_rec = reconstruct_output(target)
-        label_rec = reconstruct_output(label)
-        t = 0
-        for j in range(3):
-            t+=torch.mean(torch.abs(self.extractfeat(label_rec[j])-self.extractfeat(target_rec[j])))
+        for b in range(target.size()[0]):
+            target_rec = reconstruct_output(target[b])
+            label_rec = reconstruct_output(label[b])
+            t = 0
+            for j in range(3):
+                t+=torch.mean(torch.abs(self.extractfeat(label_rec[j])-self.extractfeat(target_rec[j])))
         return t
 
 
