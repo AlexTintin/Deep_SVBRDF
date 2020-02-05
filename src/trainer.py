@@ -77,7 +77,7 @@ def train_model(config, writer, model, dataloaders, criterion, optimizer, device
                 m=800
         '''
         # Each epoch has a training and validation phase
-        for phase in ['train']:#, 'val']:
+        for phase in ['train', 'val']:
             if phase == 'train':
                 model.train()  # Set model to training mode
             else:
@@ -136,7 +136,7 @@ def train_model(config, writer, model, dataloaders, criterion, optimizer, device
                             epoch_loss,
                             epoch)
             # deep copy the model
-            if epoch_loss < best_loss: #phase == 'val'  and  (epoch_loss < best_loss):
+            if phase == 'val'  and  (epoch_loss < best_loss):
                 best_loss = epoch_loss
                 best_model_wts = copy.deepcopy(model.state_dict())
     print()
