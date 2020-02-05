@@ -1,11 +1,12 @@
 path:
   data_path_realtrain: ../DeepMaterialsData/trainBlended
-  data_path_train: ../trainon2
-  data_path_val: ../valon1
-  data_path_test: content/my_little_dataset/test
+  data_path_train: ../train
+  data_path_val: ../val
+  data_path_test: content/new_dataset/test
   result_path_model: ../../mytraining.pt
   logs_tensorboard: /runs/test
   load_path: ../../mytraining.pt
+
 
 general:
   seed: 0
