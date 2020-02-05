@@ -124,8 +124,12 @@ def train_model(config, writer, model, dataloaders, criterion, optimizer, device
                     #loss += 0.0001*klloss
                     # backward + optimize only if in training phase
                     if phase == 'train':
-                        loss.backward()
-                        optimizer.step()
+                        if epoch==0:
+                            loss.backward(retain_graph=True)
+                            optimizer.step()
+                        else:
+                            loss.backward()
+                            optimizer.step()
                 # statistics
                 running_loss += loss.item() * n_batches
                 nbre_sample += n_batches

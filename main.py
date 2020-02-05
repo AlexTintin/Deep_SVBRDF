@@ -39,7 +39,7 @@ parser.add_argument("--batch_size", type=int, default=1)
 parser.add_argument("--num_workers", type=int, default=2)
 parser.add_argument("--trainset_division", type=int, default=10000, help="scale images to this size before cropping to 256x256")
 parser.add_argument("--real_training", type=bool, default=False)
-parser.add_argument("--loss", type=str, default="deep")
+parser.add_argument("--loss", type=str, default="rendering")
 
 config = parser.parse_args()
 
