@@ -1,4 +1,4 @@
-from utils import config
+#from utils import config
 import glob, os
 import torch
 import matplotlib.pyplot as plt
@@ -22,17 +22,45 @@ from sklearn.decomposition import PCA
 from utils.tools import *
 from src.Pretrain_encode import *
 import matplotlib.image as mpimg
+import argparse
+import scipy.misc
+from PIL import Image
+
+
+
+
+parser = argparse.ArgumentParser()
+parser.add_argument("--data_path_realtrain",type=str, default="../DeepMaterialsData/trainBlended")
+parser.add_argument("--data_path_train",type=str, default="../trainon2")
+parser.add_argument("--data_path_val",type=str, default="../test")
+parser.add_argument("--data_path_test",type=str, default="../my_little_dataset/test")
+parser.add_argument("--result_path_model",type=str, default="./../../Deep_SVBRDF_local/content/mytraining_DUNET_Resnet4.pt" )
+parser.add_argument("--logs_tensorboard",type=str, default="../../runs/testDUNET_Resnet4")
+parser.add_argument("--load_path", type=str, default="../../Deep_SVBRDF_local/content/mytraining_DUNET_Resnet4.pt")
+parser.add_argument("--seed", type=int, default=0 )
+parser.add_argument("--num_epochs", type=int, default=10000)
+parser.add_argument("--learning_rate", type=float, default=0.00005)
+parser.add_argument("--weight_decay", type=float, default=0.000000001 )
+parser.add_argument("--batch_size", type=int, default=1)
+parser.add_argument("--num_workers", type=int, default=2)
+parser.add_argument("--trainset_division", type=int, default=1000, help="scale images to this size before cropping to 256x256")
+parser.add_argument("--real_training", type=bool, default=False)
+parser.add_argument("--loss", type=str, default="deep")
+
+config = parser.parse_args()
+
+
 
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-config = config()
-writer = SummaryWriter(config.path.logs_tensorboard)
+#config = config()
+writer = SummaryWriter(config.logs_tensorboard)
 print()
 print("Use Hardware : ", device)
 #Reproductibilites
-random.seed(config.general.seed)
-np.random.seed(config.general.seed)
-torch.manual_seed(config.general.seed)
+random.seed(config.seed)
+np.random.seed(config.seed)
+torch.manual_seed(config.seed)
 torch.backends.cudnn.deterministic = True
 torch.backends.cudnn.benchmark = False
 #Load data
@@ -46,16 +74,16 @@ trans_all = transforms.Compose([
 
 
 dataload_test = dataloader.Dataloader(config, phase = "test", transform=trans_all)
-dataloadered_test = DataLoader(dataload_test, batch_size=config.train.batch_size,
-                        shuffle=True, num_workers=config.train.num_workers)
+dataloadered_test = DataLoader(dataload_test, batch_size=config.batch_size,
+                        shuffle=True, num_workers=config.num_workers)
 
 dataload_val = dataloader.Dataloader(config, phase = "val", transform=trans_all)
-dataloadered_val = DataLoader(dataload_val, batch_size=config.train.batch_size,
-                        shuffle=True, num_workers=config.train.num_workers)
+dataloadered_val = DataLoader(dataload_val, batch_size=config.batch_size,
+                        shuffle=True, num_workers=config.num_workers)
 
 dataload_train = dataloader.Dataloader(config, phase = "train", period = 'eval', transform=trans_all) #67 bizarre #37 pas mal
-dataloadered_train = DataLoader(dataload_train, batch_size=config.train.batch_size,
-                        shuffle=True, num_workers=config.train.num_workers)
+dataloadered_train = DataLoader(dataload_train, batch_size=config.batch_size,
+                        shuffle=True, num_workers=config.num_workers)
 
 
 dataloaders = {'train': dataloadered_train, 'val': dataloadered_val, 'test':dataloadered_test}
@@ -80,7 +108,7 @@ the_model.to(device)
 #writer.add_graph(the_model, imagesx.float().to(device),imagesy.float().to(device))
 #writer.close()
 #the_model.load_state_dict(torch.load(config.path.load_path+ 'l1_15000', map_location=torch.device('cpu')))
-the_model.load_state_dict(torch.load(config.path.result_path_model, map_location=torch.device('cpu')))
+the_model.load_state_dict(torch.load(config.result_path_model, map_location=torch.device('cpu')))
 the_model.eval()
 
 print("End model")
@@ -88,7 +116,7 @@ print("End model")
 
 sortie_to_plot = the_model(imagesx.float().to(device),imagesy2.float().to(device))
 sortie_to_plot2 = the_model(imagesx.float().to(device),imagesy.float().to(device))
-
+'''
 # create grid of images
 img_grid = torchvision.utils.make_grid(imagesy2)#(np.log(images+0.01)-np.log(0.01))/(np.log(1.01)-np.log(0.01))
 #img_grid_sortie_to_plot_normals =torchvision.utils.make_grid((sortie_to_plot[:,0:3,:,:].cpu().detach()))
@@ -128,18 +156,27 @@ matplotlib_imshow(img_grid_labels4.cpu().detach(), one_channel=False)
 plt.show()
 matplotlib_imshow(img_grid_sortie_to_plot4.cpu().detach(), one_channel=False)
 plt.show()
-
+'''
 
 list_light, list_view = get_wlvs_np(256, 10)
-for j in range(10):
-    viewlight = list_light[j]
-    B = render(torch.cat([imagesy2.float().to(device), sortie_to_plot], dim=1), viewlight[1], viewlight[0],roughness_factor=0.0)
-    A = render(torch.cat([imagesy.float().to(device), sortie_to_plot2], dim=1), viewlight[1], viewlight[0],roughness_factor=0.0)
+viewlight = list_light[9]
+B = render(torch.cat([imagesy2.float().to(device), sortie_to_plot], dim=1), viewlight[1], viewlight[0],roughness_factor=0.0)
+A = render(torch.cat([imagesy.float().to(device), sortie_to_plot2], dim=1), viewlight[1], viewlight[0],roughness_factor=0.0)
+Al = render(torch.cat([imagesy.float().to(device), labels.float().to(device)], dim=1), viewlight[1], viewlight[0],roughness_factor=0.0)
 
-    matplotlib_imshow(torchvision.utils.make_grid(B.detach()), one_channel=False)
-    plt.show()
-    matplotlib_imshow(torchvision.utils.make_grid(A.detach()), one_channel=False)
-    plt.show()
+'''
+im = A.mean(dim=0)
+img = im.detach().numpy()
+img = np.transpose(img, (1, 2, 0))
+plt.imshow(img)
+plt.show()
+'''
+matplotlib_imshow(torchvision.utils.make_grid(A.detach()), one_channel=False)
+plt.show()
+matplotlib_imshow(torchvision.utils.make_grid(B.detach()), one_channel=False)
+plt.show()
+matplotlib_imshow(torchvision.utils.make_grid(Al.detach()), one_channel=False)
+plt.show()
 
 '''
 for i in range(4):

@@ -18,11 +18,13 @@ class doubleConv(nn.Module):
 
         self.doubleconv = nn.Sequential(
             nn.Conv2d(input_size, output_size, kernel_size=3, padding=1),
-            nn.BatchNorm2d(output_size),
-            nn.ReLU(True),
+            #nn.BatchNorm2d(output_size),
+            #nn.ReLU(True),
+            nn.LeakyReLU(0.2, True),
             nn.Conv2d(output_size, output_size, kernel_size=3, padding=1),
-            nn.BatchNorm2d(output_size),
-            nn.ReLU(True),
+            #nn.BatchNorm2d(output_size),
+            #nn.ReLU(True),
+            nn.LeakyReLU(0.2, True),
         )
 
     def forward(self, x):
@@ -119,21 +121,21 @@ class DUnet(nn.Module):
     def forward(self, x,y):
         xlatent, x11,x9,x7,x5,x3,x1 = self.encodeUnet(y)
         x_appearence = self.encodeVAE(torch.cat([x,y], dim=1))
+        z = self.latent_sample(x_appearence)
         #z,mu,logvar = self.reparametrize(xlatent)
-        x = self.decode(x_appearence,xlatent, x11,x9,x7,x5,x3,x1)
+        x = self.decode(z,xlatent, x11,x9,x7,x5,x3,x1)
         return x#, mu,logvar
 
     def latent_sample(slef,p):
         mean = p
         stddev = 1.0
-        eps = torch.randn_like(mean=0.0, std = stddev)
-        return mean + stddev * eps
+        eps = torch.distributions.normal.Normal(torch.tensor([0.0]), torch.tensor([stddev])).sample(p.size())
+        return mean + eps.squeeze(-1).cuda()
 
     def latent_kl(self,q, p):
         mean1 = q
         mean2 = p
-
-        kl = 0.5 * torch.square(mean2 - mean1)
+        kl = 0.5 * (mean2 - mean1)**2
         kl = torch.sum(kl, axis=[1, 2, 3])
         kl = torch.mean(kl)
         return kl

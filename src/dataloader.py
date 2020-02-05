@@ -36,18 +36,19 @@ class Dataloader(Dataset):
         """
         data_dico = {}
         self.phase = phase
-        self.totiter = config.train.trainset_division
+        self.totiter = config.trainset_division
         self.iter = iteration
-        self.realdata = config.train.real_training
+        self.realdata = config.real_training
         self.period = period
         if(phase == "train"):
-            data_path = config.path.data_path_train
-            os.chdir(data_path)
+            data_path = config.data_path_train
+            if self.iter == 0:
+                os.chdir(data_path)
         if phase == "val":
-            data_path = config.path.data_path_val
+            data_path = config.data_path_val
             os.chdir(data_path)
         if phase == "test":
-            data_path = config.path.data_path_test
+            data_path = config.data_path_test
             os.chdir(data_path)
         for index_file, file in enumerate(glob.glob("*.png")):
             split_name = file.split(";")

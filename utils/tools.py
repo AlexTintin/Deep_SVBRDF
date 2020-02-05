@@ -11,11 +11,7 @@ from time import time
 
 import numpy as np
 import matplotlib.pyplot as plt
-from mpl_toolkits.mplot3d import Axes3D
-from matplotlib.ticker import NullFormatter
 
-from sklearn import manifold
-from sklearn.utils import check_random_state
 
 #code taken from
 #https://github.com/msraig/DeepInverseRendering
@@ -63,12 +59,11 @@ def log_np_norm(image):
 
 
 def reconstruct_output(inputs):
-        normal = inputs[:, 0:3, :, :]
-        diffuse = inputs[:, 3:6, :, :]
-        roughness = torch.cat([inputs[:, 6:7, :, :], inputs[:, 6:7, :, :], inputs[:, 6:7, :, :]], dim=1)
-        specular = inputs[:, 7:, :, :]
+        diffuse = inputs[:, 0:3, :, :]
+        roughness = inputs[:, 3:6, :, :]
+        specular = inputs[:, 6:, :, :]
 
-        return normal, diffuse, roughness, specular
+        return diffuse, roughness, specular
 
 def save_image(image_init,inputs,rendered,legend,plot):
     normal = inputs[:, 0:3, :, :]
@@ -83,19 +78,6 @@ def save_image(image_init,inputs,rendered,legend,plot):
     if plot:
         plt.show()
     plt.savefig(legend+'.png')
-
-def tsne(latent,i):
-    # Author: Jaques Grobler <jaques.grobler@inria.fr>
-    # License: BSD 3 clause
-
-    # Perform t-distributed stochastic neighbor embedding.
-    t0 = time()
-    tsne = manifold.TSNE(n_components=2, init='pca', random_state=0)
-    trans_data = tsne.fit_transform(latent).T
-    t1 = time()
-    print("t-SNE: %.2g sec" % (t1 - t0))
-    plt.scatter(trans_data[0], trans_data[1])
-    plt.title("t-SNE (%.2g sec)" % (t1 - t0))
 
 def matplotlib_imshow(img, one_channel=False):
     if one_channel:

@@ -52,13 +52,13 @@ def train_model(config, writer, model, dataloaders, criterion, optimizer, device
     best_model_wts = copy.deepcopy(model.state_dict())
     #introduction du best_loss pour le val, pour retenir le meilleur model
     best_loss = 100000
-    n_batches = config.train.batch_size
-    num_epochs = config.train.num_epochs
-    learning_rate = config.train.learning_rate
+    n_batches = config.batch_size
+    num_epochs = config.num_epochs
+    learning_rate = config.learning_rate
     m=400
     #eps = (torch.empty((2, 512, 8, 8)).normal_(mean=0, std=0.2)).to(device)
 
-    if config.train.loss == 'rendering' or config.train.loss == 'deep_rendering':
+    if config.loss == 'rendering' or config.loss == 'deep_rendering':
         rendering = True
     else:
         rendering = False
@@ -98,7 +98,9 @@ def train_model(config, writer, model, dataloaders, criterion, optimizer, device
                 # forward
                 # track history if only in train
                 with torch.set_grad_enabled(phase == 'train'):
-                    #x_latent = model.encode(inputs)
+                    #x_latent = model.encodeUnet(inputsy)[0]
+                    #z = model.latent_sample(model.encodeVAE(torch.cat([inputsx, inputsy], dim=1)))
+                    #klloss = model.latent_kl(z,x_latent)
                     #Dze = model.decode(x_latent+eps)
                     #Dz = model.decode(x_latent)
                     outputs = model(inputsx,inputsy)
@@ -111,14 +113,15 @@ def train_model(config, writer, model, dataloaders, criterion, optimizer, device
                             B = render(torch.cat([inputsy,labels],dim=1), viewlight[1], viewlight[0],roughness_factor=0.0)
                            # matplotlib_imshow(torchvision.utils.make_grid(B.detach()), one_channel=False)
                            # plt.show()
-                            if config.train.loss == 'rendering':
+                            if config.loss == 'rendering':
                                 loss += L1LogLoss(A,B)
                             else:
                                 loss += criterion.lossVGG16_l1(A.to(device), B.to(device))
-                    elif config.train.loss == 'l1':
+                    elif config.loss == 'l1':
                         loss = criterion(outputs, labels)
                     else:
-                        loss = criterion.lossVGG16_l1test(outputs, labels)
+                        loss = criterion.ResLoss(outputs, labels)
+                    #loss += 0.0001*klloss
                     # backward + optimize only if in training phase
                     if phase == 'train':
                         loss.backward()
@@ -144,7 +147,7 @@ def train_model(config, writer, model, dataloaders, criterion, optimizer, device
     # load best model weights
     model.load_state_dict(best_model_wts)
     #save
-    torch.save(model.state_dict(), config.path.result_path_model)
+    torch.save(model.state_dict(), config.result_path_model)
     return model
 
 
@@ -302,15 +305,24 @@ def train_model_full(config, writer, model, dataloadered_val, criterion, optimiz
         model:
     """
 
-    # chronomètre
+    #chronomètre
     since = time.time()
-    # copier le meilleur model
+    #copier le meilleur model
+    #model.load_state_dict(torch.load(config.path.load_path, map_location=torch.device('cpu')))
     best_model_wts = copy.deepcopy(model.state_dict())
     #introduction du best_loss pour le val, pour retenir le meilleur model
     best_loss = 100000
-    n_batches = config.train.batch_size
-    num_epochs = config.train.num_epochs
-    # début de l'entrainement
+    n_batches = config.batch_size
+    num_epochs = config.num_epochs
+    learning_rate = config.learning_rate
+    m=400
+    #eps = (torch.empty((2, 512, 8, 8)).normal_(mean=0, std=0.2)).to(device)
+
+    if config.loss == 'rendering' or config.loss == 'deep_rendering':
+        rendering = True
+    else:
+        rendering = False
+
     for epoch in range(num_epochs):
         print('Epoch {}/{}'.format(epoch, num_epochs - 1))
         print('-' * 10)
@@ -319,25 +331,49 @@ def train_model_full(config, writer, model, dataloadered_val, criterion, optimiz
         #running_corrects = 0
         nbre_sample = 0
         phase = 'train'
+
+        if rendering:
+            list_light, list_view = get_wlvs_np(256, 9)
         # Iterate over data.
-        for i in range(config.train.trainset_division):
+        for i in range(config.trainset_division):
             dataload_train = dataloader.Dataloader(config, phase="train", iteration=i, period='main',
                                                        transform=trans_all)
-            dataloadered_train = DataLoader(dataload_train, batch_size=config.train.batch_size,
-                                               shuffle=True, num_workers=config.train.num_workers)
+            dataloadered_train = DataLoader(dataload_train, batch_size=config.batch_size,
+                                               shuffle=True, num_workers=config.num_workers)
             dataloaders = {'train': dataloadered_train, 'val': dataloadered_val}
-            if ((i%100==0) & (i!=0)):
-                phase = 'val'
-                model.eval()
             for index_data, data in enumerate(dataloaders[phase]):
                 # get the inputs; data is a list of [inputs, labels]
-                inputs, labels = data["input"].float().to(device), data["label"].float().to(device)
+                inputsx, inputsy, labels = data["inputx"].float().to(device), data["inputy"].float().to(device), data[
+                    "label"].float().to(device)
                 # forward
                 # track history if only in train
                 with torch.set_grad_enabled(phase == 'train'):
-                    outputs = model(inputs)
-                    # outputs = model(inputs, (torch.mean(torch.mean(inputs, dim=2),dim=2)))
-                    loss = criterion(outputs, labels)
+                    # x_latent = model.encodeUnet(inputsy)[0]
+                    # z = model.latent_sample(model.encodeVAE(torch.cat([inputsx, inputsy], dim=1)))
+                    # klloss = model.latent_kl(z,x_latent)
+                    # Dze = model.decode(x_latent+eps)
+                    # Dz = model.decode(x_latent)
+                    outputs = model(inputsx, inputsy)
+                    # loss_smooth = 2*L1Loss(Dz,Dze)
+                    if rendering:
+                        # rendering loss iterate over 10 different light and view positions
+                        for j in range(9):
+                            viewlight = list_light[j]
+                            A = render(torch.cat([inputsy, outputs], dim=1), viewlight[1], viewlight[0],
+                                       roughness_factor=0.0)
+                            B = render(torch.cat([inputsy, labels], dim=1), viewlight[1], viewlight[0],
+                                       roughness_factor=0.0)
+                            # matplotlib_imshow(torchvision.utils.make_grid(B.detach()), one_channel=False)
+                            # plt.show()
+                            if config.loss == 'rendering':
+                                loss += L1LogLoss(A, B)
+                            else:
+                                loss += criterion.lossVGG16_l1(A.to(device), B.to(device))
+                    elif config.loss == 'l1':
+                        loss = criterion(outputs, labels)
+                    else:
+                        loss = criterion.ResLoss(outputs, labels)
+                    # loss += 0.0001*klloss
                     # backward + optimize only if in training phase
                     if phase == 'train':
                         loss.backward()
@@ -345,41 +381,26 @@ def train_model_full(config, writer, model, dataloadered_val, criterion, optimiz
                 # statistics
                 running_loss += loss.item() * n_batches
                 nbre_sample += n_batches
-            current_loss = running_loss / nbre_sample
+            epoch_loss = running_loss / nbre_sample
             print('{} Loss: {:.4f}'.format(
-                i, current_loss))
-            if phase == 'val' and (current_loss < best_loss):
-                best_loss = current_loss
+                phase, epoch_loss))
+            writer.add_scalar(phase + ' loss',
+                              epoch_loss,
+                              epoch)
+            # deep copy the model
+            if epoch_loss < best_loss:  # phase == 'val'  and  (epoch_loss < best_loss):
+                best_loss = epoch_loss
                 best_model_wts = copy.deepcopy(model.state_dict())
-                model.load_state_dict(best_model_wts)
-                # save
-                torch.save(model.state_dict(), config.path.load_path)
-            if phase=='val':
-                print('{} Loss: {:.4f}'.format(
-                    phase, best_loss))
-                i-=1
-                writer.add_scalar(phase + ' loss',
-                                  current_loss,
-                                  epoch)
-                phase = 'train'
-
-        epoch_loss = running_loss / nbre_sample
-        print('{} Loss: {:.4f}'.format(
-            phase, epoch_loss))
-        writer.add_scalar(phase + ' loss',
-                          epoch_loss,
-                          epoch)
-        # deep copy the model
         print()
-    time_elapsed = time.time() - since
-    print('Training complete in {:.0f}m {:.0f}s'.format(
-    time_elapsed // 60, time_elapsed % 60))
-    print('Best val Loss: {:4f}'.format(best_loss))
-    # load best model weights
-    model.load_state_dict(best_model_wts)
-    # save
-    torch.save(model.state_dict(), config.path.load_path)
-    return model
+        time_elapsed = time.time() - since
+        print('Training complete in {:.0f}m {:.0f}s'.format(
+            time_elapsed // 60, time_elapsed % 60))
+        print('Best val Loss: {:4f}'.format(best_loss))
+        # load best model weights
+        model.load_state_dict(best_model_wts)
+        # save
+        torch.save(model.state_dict(), config.result_path_model)
+        return model
 
 
 

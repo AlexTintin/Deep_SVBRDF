@@ -63,7 +63,7 @@ def render(inputs, l, v,roughness_factor=0.0):
 
 
     #normal, diffuse, roughness, specular = torch.split(inputs, 4, axis=-1)
-    normal = inputs[:, 0:3, :, :]*2-1
+    normal = inputs[:, 0:3, :, :]
     diffuse = (inputs[:, 3:6, :, :])
     roughness = (inputs[:, 6:9, :, :])
     specular = (inputs[:, 9:, :, :])
@@ -101,12 +101,12 @@ def render(inputs, l, v,roughness_factor=0.0):
         NoL = tensor_dot(n, l1)
         VoH = tensor_dot(v1, h)
 
-        NoH = torch.clamp(NoH,min=1e-8)
-        NoV = torch.clamp(NoV,min=1e-8)
-        NoL = torch.clamp(NoL, min=1e-8)
-        VoH = torch.clamp(VoH,min=1e-8)
+        NoH = torch.clamp(NoH,min=1e-8,max=1.0)
+        NoV = torch.clamp(NoV,min=1e-8,max=1.0)
+        NoL = torch.clamp(NoL, min=1e-8,max=1.0)
+        VoH = torch.clamp(VoH,min=1e-8,max=1.0)
 
-        f_d = d * INV_PI
+        f_d = d *INV_PI
 
         D = GGX(NoH, r)
         G = SmithG(NoV, NoL, r)

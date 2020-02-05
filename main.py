@@ -1,4 +1,4 @@
-from utils import config
+#from utils import config
 import glob, os
 import torch
 import matplotlib.pyplot as plt
@@ -18,24 +18,48 @@ import torch.optim as optim
 from torch.utils.tensorboard import SummaryWriter
 import random
 import numpy as np
+import argparse
 from src.trainer import *
 from src.VGG16Loss import *
+
+
+parser = argparse.ArgumentParser()
+parser.add_argument("--data_path_realtrain",type=str, default="../DeepMaterialsData/train")
+parser.add_argument("--data_path_train",type=str, default="../test")
+parser.add_argument("--data_path_val",type=str, default="../val")
+parser.add_argument("--data_path_test",type=str, default="./../new_dataset/test")
+parser.add_argument("--result_path_model",type=str, default="./../../Deep_SVBRDF_local/content/DUNET_Resnet4.pt" )
+parser.add_argument("--logs_tensorboard",type=str, default="../../runs/DUNET_Resnet4")
+parser.add_argument("--load_path", type=str, default="../../Deep_SVBRDF_local/content/DUNET_Resnet4.pt")
+parser.add_argument("--seed", type=int, default=0 )
+parser.add_argument("--num_epochs", type=int, default=10)
+parser.add_argument("--learning_rate", type=float, default=0.00005)
+parser.add_argument("--weight_decay", type=float, default=0.000000001 )
+parser.add_argument("--batch_size", type=int, default=1)
+parser.add_argument("--num_workers", type=int, default=2)
+parser.add_argument("--trainset_division", type=int, default=10000, help="scale images to this size before cropping to 256x256")
+parser.add_argument("--real_training", type=bool, default=False)
+parser.add_argument("--loss", type=str, default="deep")
+
+config = parser.parse_args()
+
+
 
 # Device = cpu ou cuda
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
 #load les parametres dasn un dictionnaire
-config = config()
+#config = config()
 
 # écrire les logs dans writer pour tensorboard
-writer = SummaryWriter(config.path.logs_tensorboard)
+writer = SummaryWriter(config.logs_tensorboard)
 print()
 print("Use Hardware : ", device)
 
 #Reproductibilites
-random.seed(config.general.seed)
-np.random.seed(config.general.seed)
-torch.manual_seed(config.general.seed)
+random.seed(config.seed)
+np.random.seed(config.seed)
+torch.manual_seed(config.seed)
 torch.backends.cudnn.deterministic = True
 torch.backends.cudnn.benchmark = False
 
@@ -51,12 +75,12 @@ trans_all = transforms.Compose([
 #os.chdir("../")
 
 dataload_test = dataloader.Dataloader(config, phase = "test", transform=trans_all)
-dataloadered_test = DataLoader(dataload_test, batch_size=config.train.batch_size,
-                        shuffle=True, num_workers=config.train.num_workers)
+dataloadered_test = DataLoader(dataload_test, batch_size=config.batch_size,
+                        shuffle=True, num_workers=config.num_workers)
 
 dataload_val = dataloader.Dataloader(config, phase = "val", transform=trans_all)
-dataloadered_val = DataLoader(dataload_val, batch_size=config.train.batch_size,
-                        shuffle=True, num_workers=config.train.num_workers)
+dataloadered_val = DataLoader(dataload_val, batch_size=config.batch_size,
+                        shuffle=True, num_workers=config.num_workers)
 
 # Charger le model
 print("Load model")
@@ -64,24 +88,24 @@ net = DUnet()
 net.to(device)
 
 # criterion : see config
-if config.train.loss == 'l1' or config.train.loss == 'rendering':
+if config.loss == 'l1' or config.loss == 'rendering':
     criterion = nn.L1Loss()
 else:
-    criterion = VGG16loss(device)
+    criterion = Resfeat(device)
 
 #optimizer of Adam
-optimizer = torch.optim.Adam(net.parameters(), lr=config.train.learning_rate,
-                             weight_decay=config.train.weight_decay)
+optimizer = torch.optim.Adam(net.parameters(), lr=config.learning_rate,
+                             weight_decay=config.weight_decay)
 
 print("End Load model")
 print()
 
 
-if config.train.real_training==False:
+if config.real_training==False:
 
     dataload_train = dataloader.Dataloader(config, phase = "train",period = 'main', transform=trans_all)
-    dataloadered_train = DataLoader(dataload_train, batch_size=config.train.batch_size,
-                                    shuffle=True, num_workers=config.train.num_workers)
+    dataloadered_train = DataLoader(dataload_train, batch_size=config.batch_size,
+                                    shuffle=True, num_workers=config.num_workers)
     dataloaders = {'train': dataloadered_train, 'val': dataloadered_val, 'test':dataloadered_test}
     print("End Load data")
     print()
