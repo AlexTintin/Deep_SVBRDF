@@ -3,6 +3,7 @@ import torch
 from torch.autograd import Variable
 from torch.nn import functional as F
 from torchvision import datasets, models, transforms
+from src.VGG16Loss import *
 
 class Flatten(nn.Module):
     def forward(self, input):
@@ -18,11 +19,11 @@ class doubleConv(nn.Module):
 
         self.doubleconv = nn.Sequential(
             nn.Conv2d(input_size, output_size, kernel_size=3, padding=1),
-            #nn.BatchNorm2d(output_size),
+            nn.BatchNorm2d(output_size),
             #nn.ReLU(True),
             nn.LeakyReLU(0.2, True),
             nn.Conv2d(output_size, output_size, kernel_size=3, padding=1),
-            #nn.BatchNorm2d(output_size),
+            nn.BatchNorm2d(output_size),
             #nn.ReLU(True),
             nn.LeakyReLU(0.2, True),
         )
@@ -34,7 +35,7 @@ class doubleConv(nn.Module):
 
 
 class DUnet(nn.Module):
-    def __init__(self):
+    def __init__(self,device):
         super(DUnet, self).__init__()
 
         self.inc = doubleConv(3, 64)
@@ -57,7 +58,23 @@ class DUnet(nn.Module):
         self.maxpool = nn.MaxPool2d(2, 2)
         self.unmawpool = nn.Upsample(scale_factor=2, mode='bilinear', align_corners=True)
         self.flat = Flatten()
+        self.lin = nn.Linear(512*4*4, 512*4*4*2)
         self.unflat = UnFlatten()
+        self.premodel = Resfeat(device)
+        self.encoderpretrained = nn.Sequential(
+            nn.Conv2d(128, 256, kernel_size=3, padding=1),
+            nn.LeakyReLU(0.2, True),
+            nn.MaxPool2d(2, 2),  # 16*16*256
+            nn.Conv2d(256, 512, kernel_size=3, padding=1),
+            nn.LeakyReLU(0.2, True),
+            nn.MaxPool2d(2, 2),  # 8*8*512
+            nn.Conv2d(512, 512, kernel_size=3, padding=1),
+            nn.LeakyReLU(0.2, True),
+            nn.MaxPool2d(2, 2),  # 8*8*512
+            nn.BatchNorm2d(512),
+
+
+        )
         #self.lin = nn.Linear(2,8192)
 
     def encodeUnet(self, x):
@@ -89,7 +106,16 @@ class DUnet(nn.Module):
         x10 = self.maxpool(x9)
         x11 = self.down5(x10)
         x12 = self.maxpool(x11)
-        x_appearence = self.down6(x12)
+        x = self.down6(x12)
+        x = self.flat(x)
+        x_appearence = self.lin(x)
+        return x_appearence
+
+    def encode_betaVAE_vgg(self, x):
+        x = self.premodel.extractfeat(x)
+        x = self.encoderpretrained(x)
+        x = self.flat(x)
+        x_appearence = self.lin(x)
         return x_appearence
 
     def decode(self,x_appearence,x13,x11,x9,x7,x5,x3,x1):
@@ -110,21 +136,29 @@ class DUnet(nn.Module):
         x19 = self.outc(x17)
         return self.sig(x19)
 
-    def reparametrize(self,x):
+    def reparametrize(self,mu, logvar):
+        """
         mu = self.flat(x)
         logvar = self.flat(x)
         std = torch.exp(0.5 * logvar)
         eps = torch.randn_like(std)
         return mu + eps * std, mu, logvar
+        """
+        std = logvar.div(2).exp()
+        eps = Variable(std.data.new(std.size()).normal_())
+        return mu + std * eps
 
 
     def forward(self, x,y):
         xlatent, x11,x9,x7,x5,x3,x1 = self.encodeUnet(y)
-        x_appearence = self.encodeVAE(torch.cat([x,y], dim=1))
-        z = self.latent_sample(x_appearence)
-        #z,mu,logvar = self.reparametrize(xlatent)
-        x = self.decode(z,xlatent, x11,x9,x7,x5,x3,x1)
-        return x#, mu,logvar
+        #x_appearence = self.encodeVAE(torch.cat([x,y], dim=1))
+        x_appearence = self.encode_betaVAE_vgg(torch.cat([x, y], dim=1))
+        mu = x_appearence[:,:int(x_appearence.size(1)/2)]
+        logvar = x_appearence[:,int(x_appearence.size(1) / 2):]
+        #z = self.latent_sample(x_appearence)
+        z= self.reparametrize(mu, logvar)
+        x = self.decode(self.unflat(z),xlatent, x11,x9,x7,x5,x3,x1)
+        return x, mu,logvar
 
     def latent_sample(slef,p):
         mean = p
@@ -132,10 +166,25 @@ class DUnet(nn.Module):
         eps = torch.distributions.normal.Normal(torch.tensor([0.0]), torch.tensor([stddev])).sample(p.size())
         return mean + eps.squeeze(-1).cuda()
 
-    def latent_kl(self,q, p):
+    def latent_kl(self,mu, logvar):
+        """
         mean1 = q
         mean2 = p
         kl = 0.5 * (mean2 - mean1)**2
-        kl = torch.sum(kl, axis=[1, 2, 3])
+        kl = torch.sum(kl, dim=[1, 2, 3])
         kl = torch.mean(kl)
         return kl
+        """
+        batch_size = mu.size(0)
+        assert batch_size != 0
+        if mu.data.ndimension() == 4:
+            mu = mu.view(mu.size(0), mu.size(1))
+        if logvar.data.ndimension() == 4:
+            logvar = logvar.view(logvar.size(0), logvar.size(1))
+
+        klds = -0.5 * (1 + logvar - mu.pow(2) - logvar.exp())
+        total_kld = klds.sum(1).mean(0, True)
+        dimension_wise_kld = klds.mean(0)
+        mean_kld = klds.mean(1).mean(0, True)
+
+        return total_kld#, dimension_wise_kld, mean_kld

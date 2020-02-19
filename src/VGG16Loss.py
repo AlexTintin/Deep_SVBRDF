@@ -68,15 +68,15 @@ class VGG19feat():
         ])
 
     def extractfeat(self, input):
-        return self.model((self.normalize(input).unsqueeze(0)).to(self.device).float())
+        return self.model((self.normalize(input.squeeze(0)).unsqueeze(0)).to(self.device).float())
 
     def VGG19Loss(self, target, label):
-        for b in range(target.size()[0]):
-            target_rec = reconstruct_output(target[b])
-            label_rec = reconstruct_output(label[b])
-            t = 0
-            for j in range(3):
-                t += torch.mean(torch.abs(self.extractfeat(label_rec[j]) - self.extractfeat(target_rec[j])))
+        #for b in range(target.size()[0]):
+            #target_rec = reconstruct_output(target[b])
+            #label_rec = reconstruct_output(label[b])
+        #t = 0
+        #for j in range(0):
+        t = torch.mean(torch.abs(self.extractfeat(label) - self.extractfeat(target)))
         return t
 
 
@@ -119,7 +119,7 @@ class Alexfeat():
 
 class Resfeat():
     def __init__(self, device):
-        res = torch.hub.load('pytorch/vision:v0.4.2', 'resnet18', pretrained=True)
+        res = models.resnet18(pretrained=True)
         self.device = device
         self.model = ResBottom(res, 4)
         self.model.to(device)
@@ -131,7 +131,10 @@ class Resfeat():
         ])
 
     def extractfeat(self, input):
-        return self.model(((self.normalize(input).unsqueeze(0)).to(self.device)).float())
+        inputN = input
+        for b in range(input.size(0)):
+            inputN[b] = torch.cat([self.normalize(input[b,:3,:,:]),self.normalize(input[b,3:,:,:])],dim=0)
+        return self.model(inputN)
 
     def ResLoss(self, target, label):
         for b in range(target.size()[0]):
@@ -146,7 +149,10 @@ class Resfeat():
 class ResBottom(nn.Module):
     def __init__(self, original_model, N):
         super(ResBottom, self).__init__()
-        self.features = nn.Sequential(*list(original_model.children())[:-N])
+        layers = list(original_model.children())[:-N]
+        layers[0] = nn.Conv2d(6, 64, kernel_size=7, stride=2, padding=3,
+                               bias=False)
+        self.features = nn.Sequential(*layers)
 
     def forward(self, x):
         x = self.features(x)

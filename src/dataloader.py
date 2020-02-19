@@ -5,12 +5,13 @@ import pandas as pd
 import numpy as np
 from skimage import io
 from torch.utils.data import Dataset, DataLoader
-from torchvision import transforms, utils
+#from torchvision import transforms, utils
 import glob, os
 
 from src.rendering_loss import *
 import torchvision
 import matplotlib.pyplot as plt
+from skimage.transform import resize
 
 
 def matplotlib_imshow(img, one_channel=False):
@@ -88,4 +89,54 @@ class Dataloader(Dataset):
             sample = {'inputx': input_t, 'inputy': normals_t,'label': label_t}
         else:
             sample = {'inputx': input, 'inputy': normals,'label': label}
+        return sample
+
+
+class Dataloaderbis(Dataset):
+    """Face Landmarks dataset."""
+
+    def __init__(self, config, phase,iteration=0, period='nul', transform=None):
+        """
+        Args:
+            csv_file (string): Path to the csv file with annotations.
+            root_dir (string): Directory with all the images.
+            transform (callable, optional): Optional transform to be applied
+                on a sample.
+        """
+        data_dico = {}
+        self.phase = phase
+        self.totiter = config.trainset_division
+        self.iter = iteration
+        self.realdata = config.real_training
+        self.period = period
+        if(phase == "train"):
+            data_path = config.data_path_train
+            os.chdir(data_path)
+            data_dico[0] = {'nom_file_shape': data_path +"/shape.png",'nom_file_style': data_path + "/style.png"}
+        self.dico =  data_dico
+        self.config = config
+        self.transform = transform
+
+    def __len__(self):
+        if ((self.phase == "train") & (self.realdata==True)):
+            return int((len(self.dico)-1)/self.totiter)
+        else:
+            return (len(self.dico))
+
+    def __getitem__(self, idx):
+        if ((self.phase == "train") & (self.realdata==True)):
+            img_name = self.dico[int((len(self.dico)-1)/self.totiter)*self.iter+idx]["nom_file"]
+        else:
+            img_shape = self.dico[idx]["nom_file_shape"]
+            img_style = self.dico[idx]["nom_file_style"]
+        image_sh = io.imread(img_shape)
+        image_st = io.imread(img_style)
+        image_st_resized = resize(image_st, (image_sh.shape[0] , image_sh.shape[1]),
+                               anti_aliasing=True)
+        if self.transform:
+            image_st_resized_t = self.transform(image_st_resized)
+            image_sh_t = self.transform(image_sh)
+            sample = {'inputx': image_st_resized_t, 'inputy': image_sh_t,'label': image_st_resized_t}
+        else:
+            sample = {'inputx': image_st_resized, 'inputy': image_sh,'label': image_st_resized}
         return sample
