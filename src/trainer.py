@@ -9,10 +9,14 @@ import numpy as np
 from torch.utils.data import Dataset, DataLoader
 from src import dataloader
 from torchvision import transforms, utils
+from torch.autograd import Variable
 from src.rendering_loss import *
 import torchvision
 import matplotlib.pyplot as plt
 import time
+
+def cuda(tensor, uses_cuda):
+    return tensor.cuda() if uses_cuda else tensor
 
 def matplotlib_imshow(img, one_channel=False):
     if one_channel:
@@ -48,18 +52,19 @@ def train_model(config, writer, model, dataloaders, criterion, optimizer, device
     #chronomètre
     since = time.time()
     #copier le meilleur model
-   # model.load_state_dict(torch.load(config.load_path, map_location=torch.device('cpu')))
+    #model.load_state_dict(torch.load(config.load_path, map_location=torch.device('cpu')))
     best_model_wts = copy.deepcopy(model.state_dict())
     #introduction du best_loss pour le val, pour retenir le meilleur model
     best_loss = 100000
     n_batches = config.batch_size
     num_epochs = config.num_epochs
     learning_rate = config.learning_rate
-    lr_kl = 0.1
-    m=400
-    lambda1 = lambda epoch: (-config.learning_rate / (100000)) * epoch + config.learning_rate
-    scheduler = torch.optim.lr_scheduler.LambdaLR(optimizer, lr_lambda=lambda1)
+    lr_kl = 0.0002
+    C_max = Variable(cuda(torch.FloatTensor([config.C_max]), True))
+    #lambda1 = lambda epoch: (-config.learning_rate / (100000)) * epoch + config.learning_rate
+    #scheduler = torch.optim.lr_scheduler.LambdaLR(optimizer, lr_lambda=lambda1)
     #eps = (torch.empty((2, 512, 8, 8)).normal_(mean=0, std=0.2)).to(device)
+    torch.cuda.empty_cache()
 
     if config.loss == 'rendering' or config.loss == 'deep_rendering':
         rendering = True
@@ -70,15 +75,6 @@ def train_model(config, writer, model, dataloaders, criterion, optimizer, device
     for epoch in range(num_epochs):
         print('Epoch {}/{}'.format(epoch, num_epochs - 1))
         print('-' * 10)
-        '''
-        if epoch == m:
-            print('lr is changing')
-            learning_rate /= 2
-            optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate,
-                                         weight_decay=0.0000000000001)
-            if epoch==400:
-                m=800
-        '''
         # Each epoch has a training and validation phase
         for phase in ['train']:#, 'val']:
             if phase == 'train':
@@ -87,7 +83,7 @@ def train_model(config, writer, model, dataloaders, criterion, optimizer, device
                 model.eval()   # Set model to evaluate mode
             #initialisation des variables
             running_loss = 0.0
-            running_corrects = 0
+            beta_vae_loss = 0
             nbre_sample = 0
             loss = 0
 
@@ -95,18 +91,16 @@ def train_model(config, writer, model, dataloaders, criterion, optimizer, device
             if rendering :
                 list_light, list_view = get_wlvs_np(256, 9)
             # Iterate over data.
+            #if phase == 'train':
+             #   scheduler.step()
             for index_data, data in enumerate(dataloaders[phase]):
                 # get the inputs; data is a list of [inputs, labels]
                 inputsx,inputsy, labels = data["inputx"].float().to(device),data["inputy"].float().to(device), data["label"].float().to(device)
                 # forward
                 # track history if only in train
                 with torch.set_grad_enabled(phase == 'train'):
-                    #x_latent = model.encodeUnet(inputsy)[0]
-                    #z = model.latent_sample(model.encodeVAE(torch.cat([inputsx, inputsy], dim=1)))
-                    #klloss = model.latent_kl(z,x_latent)
                     outputs,mu,logvar = model(inputsx,inputsy)
                     total_kld = model.latent_kl(mu, logvar)
-                    #loss_smooth = 2*L1Loss(Dz,Dze)
                     if rendering:
                     # rendering loss iterate over 10 different light and view positions
                         for j in range(9):
@@ -119,26 +113,23 @@ def train_model(config, writer, model, dataloaders, criterion, optimizer, device
                                 loss += L1LogLoss(A,B)
                             else:
                                 loss += criterion.lossVGG16_l1(A.to(device), B.to(device))
+
                     elif config.loss == 'l1':
                         loss = criterion(outputs, labels)
                     else:
                         loss = criterion.VGG19Loss(outputs, labels)
-
-                    beta_vae_loss = loss + self.beta * total_kld
-                    C = torch.clamp(self.C_max / self.C_stop_iter * self.global_iter, 0, self.C_max.data[0])
-                    beta_vae_loss = recon_loss + self.gamma * (total_kld - C).abs()
+                    C = torch.clamp(C_max / config.num_epochs * epoch, 0, C_max.data[0])
+                    beta_vae_loss = loss+config.gamma * (total_kld - C).abs()
                     # backward + optimize only if in training phase
                     if phase == 'train':
-                        if epoch==0:
-                            loss.backward()
-                            optimizer.step()
-                        else:
-                            loss.backward()
-                            optimizer.step()
+                        #optim.zero_grad()
+                        beta_vae_loss.backward()
+                        optimizer.step()
                 # statistics
-                running_loss += loss.item() * n_batches
+                running_loss += beta_vae_loss.item() * n_batches*0.0001
                 nbre_sample += n_batches
-            scheduler.step()
+
+            print(optimizer.state_dict()["param_groups"][0]["lr"])
             time_elapsed = time.time() - since
             print('epoch time complete in {:.0f}m {:.0f}s'.format(
                 time_elapsed // 60, time_elapsed % 60))

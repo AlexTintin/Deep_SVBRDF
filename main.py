@@ -25,16 +25,18 @@ from src.VGG16Loss import *
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--data_path_realtrain",type=str, default="../DeepMaterialsData/train")
-parser.add_argument("--data_path_train",type=str, default=".")
+parser.add_argument("--data_path_train",type=str, default="../trainon2")
 parser.add_argument("--data_path_val",type=str, default="../val")
-parser.add_argument("--data_path_test",type=str, default="./../new_dataset/test")
-parser.add_argument("--result_path_model",type=str, default="./content/DUNET.pt" )
-parser.add_argument("--logs_tensorboard",type=str, default="../../runs/DUNET")
-parser.add_argument("--load_path", type=str, default="./content/DUNET.pt")
+parser.add_argument("--data_path_test",type=str, default="./../my_data2/val")
+parser.add_argument("--result_path_model",type=str, default="../../Deep_SVBRDF_local/content/beta_vae_rocks.pt" )
+parser.add_argument("--logs_tensorboard",type=str, default="../../runs/beta_vae_rocks")
+parser.add_argument("--load_path", type=str, default="../../Deep_SVBRDF_local/content/beta_vae_rocks.pt")
 parser.add_argument("--seed", type=int, default=0 )
-parser.add_argument("--num_epochs", type=int, default=15000)
-parser.add_argument("--learning_rate", type=float, default=0.0005)
+parser.add_argument("--num_epochs", type=int, default=10000)
+parser.add_argument("--learning_rate", type=float, default=0.0000005)
 parser.add_argument("--weight_decay", type=float, default=0.00000001)
+parser.add_argument("--gamma", type=float, default=1000)
+parser.add_argument('--C_max', default=50, type=float, help='capacity parameter(C) of bottleneck channel')
 parser.add_argument("--batch_size", type=int, default=1)
 parser.add_argument("--num_workers", type=int, default=2)
 parser.add_argument("--trainset_division", type=int, default=10000, help="scale images to this size before cropping to 256x256")
@@ -84,7 +86,7 @@ dataloadered_val = DataLoader(dataload_val, batch_size=config.batch_size,
 
 # Charger le model
 print("Load model")
-net = DUnet(device)
+net = DUnet()
 net.to(device)
 
 """
@@ -101,13 +103,13 @@ smoothing = 0.05
  """
 # criterion : see config
 if config.loss == 'l1' or config.loss == 'rendering':
-    criterion = nn.MSELoss()
+    criterion = nn.L1Loss()
 else:
     criterion = VGG19feat(device)
 
 
 #optimizer of Adam
-optimizer = torch.optim.Adam(net.parameters(), lr=0.001)
+optimizer = torch.optim.AdamW(net.parameters(), lr=config.learning_rate,weight_decay = config.weight_decay)
 
 
 

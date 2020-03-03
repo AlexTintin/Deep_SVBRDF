@@ -53,14 +53,46 @@ dico_all,rty = get_statistics_all(path_folder_images)
 #print(dico_all)
 
 r = np.zeros([1,rty],int)
-
+compteur=0
+liste = []
+liste1=[]
 for index_key, key in enumerate(dico_all.keys()):
-    compteur = 0
+    if index_key%7==0:
+        liste1.append(key)
+for index_key, key in enumerate(dico_all.keys()):
+    for ale in range(len(liste1)):
+        if liste1[ale] == key :
+            for index_key2, key2 in enumerate(dico_all[key].keys()):
 
-    for index_key2, key2 in enumerate(dico_all[key].keys()):
-        compteur += len(dico_all[key][key2])
-    r[0,index_key]=compteur
+                for al in range(len(liste1)):
+                    if liste1[al] == key2:
+                        a = []
 
+                        a.append(dico_all[key][key2][0])
+                        a.append(dico_all[key][key2][1])
+                        for k in range(int(len(dico_all[key][key2])/2)):
+                            b = dico_all[key][key2][2*k]
+                            l=0
+                            for i in range(int(len(a)/2)):
+                                if a[2*i]==b:
+                                    l+=1
+                            if l==0:
+                                a.append(b)
+                                a.append(dico_all[key][key2][2*k+1])
+                        for i in range(int(len(a)/2)):
+                            liste.append(a[2*i+1]+';'+key+'X'+key2+';'+a[2*i])
+
+
+print(len(liste))
+
+
+os.system('mkdir ../theones_20/')
+for i in range(len(liste)):
+    im = Image.open(path_folder_images + '/' + liste[i])
+    im.save('../theones_20/' + liste[i])
+    print(i)
+
+"""
 
 namesfilestokeeptrain = []
 
@@ -87,3 +119,4 @@ for i in range(len(namesfilestokeeptrain)):
     im = Image.open(path_folder_images+'/'+namesfilestokeeptrain[i])
     im.save('../new_dataset/val/'+namesfilestokeeptrain[i])
     print(i)
+"""

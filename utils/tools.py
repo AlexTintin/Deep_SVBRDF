@@ -60,8 +60,8 @@ def log_np_norm(image):
 
 def reconstruct_output(inputs):
         diffuse = inputs[ 0:3, :, :]
-        roughness = inputs[ 3:6, :, :]
-        specular = inputs[ 6:, :, :]
+        roughness = torch.cat([inputs[ 3:4, :, :], inputs[3:4, :, :], inputs[ 3:4, :, :]], dim=0)
+        specular = inputs[ 4:, :, :]
 
         return diffuse, roughness, specular
 

@@ -68,15 +68,16 @@ class VGG19feat():
         ])
 
     def extractfeat(self, input):
-        return self.model((self.normalize(input.squeeze(0)).unsqueeze(0)).to(self.device).float())
+        return self.model((self.normalize(input).unsqueeze(0)).to(self.device).float())
 
     def VGG19Loss(self, target, label):
-        #for b in range(target.size()[0]):
-            #target_rec = reconstruct_output(target[b])
-            #label_rec = reconstruct_output(label[b])
-        #t = 0
-        #for j in range(0):
-        t = torch.mean(torch.abs(self.extractfeat(label) - self.extractfeat(target)))
+        t = 0
+        for b in range(target.size()[0]):
+            target_rec = reconstruct_output(target[b])
+            label_rec = reconstruct_output(label[b])
+
+        for j in range(3):
+            t += torch.mean(torch.abs(self.extractfeat(label_rec[j]) - self.extractfeat(target_rec[j])))#torch.mean(torch.abs(self.extractfeat(label) - self.extractfeat(target)))
         return t
 
 

@@ -31,15 +31,15 @@ from PIL import Image
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--data_path_realtrain",type=str, default="../DeepMaterialsData/trainBlended")
-parser.add_argument("--data_path_train",type=str, default=".")
-parser.add_argument("--data_path_val",type=str, default="../test")
-parser.add_argument("--data_path_test",type=str, default="../my_little_dataset/test")
-parser.add_argument("--result_path_model",type=str, default="./content/DUNET_suda5.pt" )
+parser.add_argument("--data_path_train",type=str, default="../trainon2")
+parser.add_argument("--data_path_val",type=str, default="../valon1")
+parser.add_argument("--data_path_test",type=str, default="./../my_little_dataset/test")
+parser.add_argument("--result_path_model",type=str, default="../../Deep_SVBRDF_local/content/mytraining_DUNET_VAE_l1_2mat_specbis2.pt" )
 parser.add_argument("--logs_tensorboard",type=str, default="../../runs/testDUNET_Resnet4")
-parser.add_argument("--load_path", type=str, default="../../Deep_SVBRDF_local/content/mytraining_DUNET_VAE_l1.pt")
+parser.add_argument("--load_path", type=str, default="../../Deep_SVBRDF_local/content/mytraining_DUNET_VAE_l1_2mat_spec.pt")
 parser.add_argument("--seed", type=int, default=0 )
 parser.add_argument("--num_epochs", type=int, default=10000)
-parser.add_argument("--learning_rate", type=float, default=0.00005)
+parser.add_argument("--learning_rate", type=float, default=0.000005)
 parser.add_argument("--weight_decay", type=float, default=0.000000001 )
 parser.add_argument("--batch_size", type=int, default=1)
 parser.add_argument("--num_workers", type=int, default=2)
@@ -71,7 +71,7 @@ trans_all = transforms.Compose([
         transforms.ToTensor()
     ])
 
-'''
+
 dataload_test = dataloader.Dataloader(config, phase = "test", transform=trans_all)
 dataloadered_test = DataLoader(dataload_test, batch_size=config.batch_size,
                         shuffle=True, num_workers=config.num_workers)
@@ -79,8 +79,8 @@ dataloadered_test = DataLoader(dataload_test, batch_size=config.batch_size,
 dataload_val = dataloader.Dataloader(config, phase = "val", transform=trans_all)
 dataloadered_val = DataLoader(dataload_val, batch_size=config.batch_size,
                         shuffle=True, num_workers=config.num_workers)
-'''
-dataload_train = dataloader.Dataloaderbis(config, phase = "train", period = 'eval', transform=trans_all) #67 bizarre #37 pas mal
+
+dataload_train = dataloader.Dataloader(config, phase = "train", period = 'eval', transform=trans_all) #67 bizarre #37 pas mal
 dataloadered_train = DataLoader(dataload_train, batch_size=config.batch_size,
                         shuffle=True, num_workers=config.num_workers)
 
@@ -91,6 +91,9 @@ dataloaders = {'train': dataloadered_train}#, 'val': dataloadered_val, 'test':da
 # get some random training images
 dataiter = iter(dataloadered_train)
 sample = dataiter.next()
+sample = dataiter.next()
+sample = dataiter.next()
+
 '''
 dataiter = iter(dataloadered_val)
 sample2 = dataiter.next()
@@ -109,7 +112,7 @@ the_model.to(device)
 #writer.add_graph(the_model, imagesx.float().to(device),imagesy.float().to(device))
 #writer.close()
 #the_model.load_state_dict(torch.load(config.path.load_path+ 'l1_15000', map_location=torch.device('cpu')))
-'''
+
 state_dict = torch.load(config.result_path_model)
 # create new OrderedDict that does not contain `module.`
 from collections import OrderedDict
@@ -119,8 +122,8 @@ for k, v in state_dict.items():
     new_state_dict[name] = v
 # load params
 the_model.load_state_dict(new_state_dict)
-'''
-the_model.load_state_dict(torch.load(config.result_path_model, map_location=torch.device('cpu')))
+
+#the_model.load_state_dict(torch.load(config.result_path_model, map_location=torch.device('cpu')))
 the_model.eval()
 
 print("End model")
@@ -134,9 +137,10 @@ sortie_to_plot2 = the_model(imagesx.float().to(device),imagesy.float().to(device
 #img_grid_sortie_to_plot_normals =torchvision.utils.make_grid((sortie_to_plot[:,0:3,:,:].cpu().detach()))
 img_grid_labels = torchvision.utils.make_grid(imagesx)
 img_grid_labelsa = torchvision.utils.make_grid(imagesy)
-img_grid_labels2 = torchvision.utils.make_grid(labels[:,0:3,:,:])
-#img_grid_labels3 = torchvision.utils.make_grid((labels[:,3:6,:,:]))
-#img_grid_sortie_to_plot2 = torchvision.utils.make_grid((labels[:,6:9,:,:]))
+img_grid_labels2 = torchvision.utils.make_grid(labels)
+#img_grid_labels2 = torchvision.utils.make_grid(labels[:,0:3,:,:])
+#img_grid_labels3 = torchvision.utils.make_grid((labels[:,3:4,:,:]))
+#img_grid_sortie_to_plot2 = torchvision.utils.make_grid((labels[:,4:7,:,:]))
 
 matplotlib_imshow(img_grid_labels.cpu().detach(), one_channel=False)
 plt.show()
@@ -147,18 +151,18 @@ plt.show()
 
 matplotlib_imshow(img_grid_labels2.cpu().detach(), one_channel=False)
 plt.show()
-'''
-matplotlib_imshow(img_grid_labels3.cpu().detach(), one_channel=False)
-plt.show()
-matplotlib_imshow(img_grid_sortie_to_plot2.cpu().detach(), one_channel=False)
-plt.show()
-'''
 
-img_grid_labels2 = torchvision.utils.make_grid(sortie_to_plot2[:,0:3,:,:])
-#img_grid_sortie_to_plot2 = torchvision.utils.make_grid((sortie_to_plot[:,0:3,:,:]))
-#img_grid_labels3 = torchvision.utils.make_grid((sortie_to_plot2[:,3:6,:,:]))
+#matplotlib_imshow(img_grid_labels3.cpu().detach(), one_channel=False)
+#plt.show()
+#matplotlib_imshow(img_grid_sortie_to_plot2.cpu().detach(), one_channel=False)
+#plt.show()
+
+img_grid_labels2 = torchvision.utils.make_grid(sortie_to_plot2)
+#img_grid_labels2 = torchvision.utils.make_grid(sortie_to_plot2[:,0:3,:,:])
+#mg_grid_sortie_to_plot2 = torchvision.utils.make_grid((sortie_to_plot[:,0:3,:,:]))
+#img_grid_labels3 = torchvision.utils.make_grid((sortie_to_plot2[:,3:4,:,:]))
 #img_grid_sortie_to_plot3 = torchvision.utils.make_grid((sortie_to_plot[:,3:6,:,:]))
-#img_grid_labels4 = torchvision.utils.make_grid((sortie_to_plot2[:,6:9,:,:]))
+#img_grid_labels4 = torchvision.utils.make_grid((sortie_to_plot2[:,4:7,:,:]))
 #img_grid_sortie_to_plot4 = torchvision.utils.make_grid((sortie_to_plot[:,6:9,:,:]))
 
 #matplotlib_imshow(img_grid, one_channel=False)
@@ -167,27 +171,25 @@ img_grid_labels2 = torchvision.utils.make_grid(sortie_to_plot2[:,0:3,:,:])
 #plt.show()
 matplotlib_imshow(img_grid_labels2.cpu().detach(), one_channel=False)
 plt.show()
-'''
-matplotlib_imshow(img_grid_sortie_to_plot2.cpu().detach(), one_channel=False)
-plt.show()
-matplotlib_imshow(img_grid_labels3.cpu().detach(), one_channel=False)
-plt.show()
-matplotlib_imshow(img_grid_sortie_to_plot3.cpu().detach(), one_channel=False)
-plt.show()
-matplotlib_imshow(img_grid_labels4.cpu().detach(), one_channel=False)
-plt.show()
-matplotlib_imshow(img_grid_sortie_to_plot4.cpu().detach(), one_channel=False)
-plt.show()
-'''
+
+#matplotlib_imshow(img_grid_sortie_to_plot2.cpu().detach(), one_channel=False)
+#plt.show()
+#matplotlib_imshow(img_grid_labels3.cpu().detach(), one_channel=False)
+#plt.show()
+
+#matplotlib_imshow(img_grid_labels4.cpu().detach(), one_channel=False)
+#plt.show()
+
+
 
 '''
 list_light, list_view = get_wlvs_np(256, 10)
 viewlight = list_light[9]
-B = render(torch.cat([imagesy2.float().to(device), sortie_to_plot], dim=1), viewlight[1], viewlight[0],roughness_factor=0.0)
+#B = render(torch.cat([imagesy2.float().to(device), sortie_to_plot], dim=1), viewlight[1], viewlight[0],roughness_factor=0.0)
 A = render(torch.cat([imagesy.float().to(device), sortie_to_plot2], dim=1), viewlight[1], viewlight[0],roughness_factor=0.0)
 Al = render(torch.cat([imagesy.float().to(device), labels.float().to(device)], dim=1), viewlight[1], viewlight[0],roughness_factor=0.0)
-'''
-'''
+
+
 im = A.mean(dim=0)
 img = im.detach().numpy()
 img = np.transpose(img, (1, 2, 0))
@@ -195,11 +197,11 @@ plt.imshow(img)
 plt.show()
 
 matplotlib_imshow(torchvision.utils.make_grid(A.detach()), one_channel=False)
-plt.savefig('loss.png')
-matplotlib_imshow(torchvision.utils.make_grid(B.detach()), one_channel=False)
-plt.savefig('loss2.png')
+plt.show()
+#matplotlib_imshow(torchvision.utils.make_grid(B.detach()), one_channel=False)
+#plt.show()
 matplotlib_imshow(torchvision.utils.make_grid(Al.detach()), one_channel=False)
-plt.savefig('loss3.png')
+plt.show()
 '''
 '''
 for i in range(4):
