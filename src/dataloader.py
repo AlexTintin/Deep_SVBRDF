@@ -37,9 +37,7 @@ class Dataloader(Dataset):
         """
         data_dico = {}
         self.phase = phase
-        self.totiter = config.trainset_division
         self.iter = iteration
-        self.realdata = config.real_training
         self.period = period
         if(phase == "train"):
             data_path = config.data_path_train
@@ -61,16 +59,10 @@ class Dataloader(Dataset):
         self.transform = transform
 
     def __len__(self):
-        if ((self.phase == "train") & (self.realdata==True)):
-            return int((len(self.dico)-1)/self.totiter)
-        else:
             return (len(self.dico))
 
     def __getitem__(self, idx):
-        if ((self.phase == "train") & (self.realdata==True)):
-            img_name = self.dico[int((len(self.dico)-1)/self.totiter)*self.iter+idx]["nom_file"]
-        else:
-            img_name = self.dico[idx]["nom_file"]
+        img_name = self.dico[idx]["nom_file"]
         image = io.imread(img_name)
         delta = int(32/2)
         input = (np.log(image[delta:-delta,delta:288-delta,:]/255+0.01)-np.log(0.01))/(np.log(1.01)-np.log(0.01))
@@ -86,58 +78,8 @@ class Dataloader(Dataset):
             input_t = self.transform(input)
             label_t = self.transform(label)
             normals_t = self.transform(normals)
-            diffuse_t = self.transform(diffuse)
+            roughness_t = self.transform(roughness)
             sample = {'inputx': input_t, 'inputy': normals_t,'label': label_t}
         else:
             sample = {'inputx': input, 'inputy': normals,'label': label}
-        return sample
-
-
-class Dataloaderbis(Dataset):
-    """Face Landmarks dataset."""
-
-    def __init__(self, config, phase,iteration=0, period='nul', transform=None):
-        """
-        Args:
-            csv_file (string): Path to the csv file with annotations.
-            root_dir (string): Directory with all the images.
-            transform (callable, optional): Optional transform to be applied
-                on a sample.
-        """
-        data_dico = {}
-        self.phase = phase
-        self.totiter = config.trainset_division
-        self.iter = iteration
-        self.realdata = config.real_training
-        self.period = period
-        if(phase == "train"):
-            data_path = config.data_path_train
-            os.chdir(data_path)
-            data_dico[0] = {'nom_file_shape': data_path +"/shape.png",'nom_file_style': data_path + "/style.png"}
-        self.dico =  data_dico
-        self.config = config
-        self.transform = transform
-
-    def __len__(self):
-        if ((self.phase == "train") & (self.realdata==True)):
-            return int((len(self.dico)-1)/self.totiter)
-        else:
-            return (len(self.dico))
-
-    def __getitem__(self, idx):
-        if ((self.phase == "train") & (self.realdata==True)):
-            img_name = self.dico[int((len(self.dico)-1)/self.totiter)*self.iter+idx]["nom_file"]
-        else:
-            img_shape = self.dico[idx]["nom_file_shape"]
-            img_style = self.dico[idx]["nom_file_style"]
-        image_sh = io.imread(img_shape)
-        image_st = io.imread(img_style)
-        image_st_resized = resize(image_st, (image_sh.shape[0] , image_sh.shape[1]),
-                               anti_aliasing=True)
-        if self.transform:
-            image_st_resized_t = self.transform(image_st_resized)
-            image_sh_t = self.transform(image_sh)
-            sample = {'inputx': image_st_resized_t, 'inputy': image_sh_t,'label': image_st_resized_t}
-        else:
-            sample = {'inputx': image_st_resized, 'inputy': image_sh,'label': image_st_resized}
         return sample
